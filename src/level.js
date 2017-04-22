@@ -146,8 +146,8 @@ Level.prototype.generateTileEditorObjectsFromTiles = function(tilemap) {
         var tableDirection = tilemap.getNearestTileDirection(chairPositions[i], isTable);
         this.addTileEditorObject(new Chair({
             sceneParent: this.tileEditorObjectParent,
-            x: chairPositions[i].x,
-            z: chairPositions[i].y,
+            x: chairPositions[i].x + 0.5,
+            z: chairPositions[i].y + 0.5,
             direction: tableDirection
             }));
     }

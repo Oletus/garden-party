@@ -95,8 +95,8 @@ Character.prototype.sitOn = function(chair) {
     if (this.sittingOn !== null) {
         this.sittingOn.sitter = null;
     }
-    this.x = chair.x + 0.5;
-    this.z = chair.z + 0.5;
+    this.x = chair.x;
+    this.z = chair.z;
     this.sittingOn = chair;
     chair.sitter = this;
 };
@@ -180,6 +180,10 @@ var PlayerCharacter = function(options) {
     
     // The physics class we're using handles movement in terms of x / y. However we're using three.js x / z coordinates.
     this.physicsShim = new PlayerPhysicsShim({x: this.x, y: this.z});
+    
+    this.interactionCursor = new InteractionCursor({
+        sceneParent: this.sceneParent
+    });
 };
 
 PlayerCharacter.prototype = new Character();
@@ -205,20 +209,87 @@ PlayerCharacter.prototype.update = function(deltaTime) {
     this.z = this.physicsShim.y;
     this.center.position.x = this.x;
     this.center.position.z = this.z;
+    
+    var interactionObject = this.getPickUpInteractionObject();
+    if (interactionObject !== null) {
+        this.interactionCursor.object.visible = true;
+        this.interactionCursor.object.position.x = interactionObject.x;
+        this.interactionCursor.object.position.z = interactionObject.z;
+        this.interactionCursor.update(deltaTime);
+    } else {
+        this.interactionCursor.object.visible = false;
+    }
 };
 
-PlayerCharacter.prototype.tryPickUpOrDrop = function() {
+PlayerCharacter.prototype.getPickUpInteractionObject = function() {
     if (this.carrying !== null) {
         if (this.carrying instanceof Character) {
             var nearest = this.getNearest(this.level.getChairs(), function(chair) { return chair.sitter === null; });
             if (nearest !== null && this.distance(nearest) < 1.5) {
-                this.dropObjectOnChair(nearest);
+                return nearest;
             }
         }
     } else {
         var nearest = this.getNearest(this.level.guests, function(guest) { return guest.canBePickedUp; });
         if (nearest !== null && this.distance(nearest) < 1.5) {
-            this.pickUpObject(nearest);
+            return nearest;
         }
     }
+    return null;
+};
+
+PlayerCharacter.prototype.tryPickUpOrDrop = function() {
+    var interactionObject = this.getPickUpInteractionObject();
+    if (interactionObject !== null) {
+        if (this.carrying !== null) {
+            this.dropObjectOnChair(interactionObject);
+        } else {
+            this.pickUpObject(interactionObject);
+        }
+    }
+};
+
+
+var InteractionCursor = function(options) {
+    var defaults = {
+        color: 0xaaccff
+    };
+    objectUtil.initWithDefaults(this, defaults, options);
+
+    this.arrow = this.createArrowMesh();
+    this.arrow.rotation.z = -Math.PI * 0.5;
+    this.arrow.position.y = 2.5;
+    
+    this.initThreeSceneObject({
+        object: this.arrow,
+        sceneParent: options.sceneParent
+    });
+    this.addToScene();
+};
+
+InteractionCursor.prototype = new GJS.ThreeSceneObject();
+
+InteractionCursor.material = function(color, emissiveColor) {
+    if (emissiveColor === undefined) emissiveColor = 0x448888;
+    var material = new THREE.MeshPhongMaterial( { color: color, emissive: emissiveColor } );
+    material.transparent = true;
+    material.opacity = 0.7;
+    return material;
+};
+
+InteractionCursor.prototype.createArrowMesh = function() {
+    var shape = GJS.utilTHREE.createArrowShape(0.6, 0.4, 0.3, 0.2);
+    var line = new THREE.LineCurve3(new THREE.Vector3(0, 0, -0.1), new THREE.Vector3(0, 0, 0.1));
+    var extrudeSettings = {
+        steps: 1,
+        bevelEnabled: false,
+        extrudePath: line
+    };
+    var geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+
+    return new THREE.Mesh(geometry, InteractionCursor.material(this.color));
+};
+
+InteractionCursor.prototype.update = function(deltaTime) {
+    this.arrow.rotation.y += deltaTime * Math.PI * 0.5;
 };

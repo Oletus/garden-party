@@ -87,8 +87,8 @@ var Chair = function(options) {
     objectUtil.initWithDefaults(this, defaults, options);
     
     this.origin = new THREE.Object3D();
-    this.origin.position.x = this.x + 0.5;
-    this.origin.position.z = this.z + 0.5;
+    this.origin.position.x = this.x;
+    this.origin.position.z = this.z;
     
     this.setDisplayAngleFromXZ(this.direction.x, this.direction.y);
     
@@ -116,7 +116,7 @@ var Chair = function(options) {
 Chair.prototype = new GridSceneObject();
 
 Chair.prototype.getColliderRect = function() {
-    return new Rect(this.x, this.x + 1, this.z, this.z + 1);
+    return new Rect(this.x - 0.5, this.x + 0.5, this.z - 0.5, this.z + 0.5);
 };
 
 Chair.prototype.setDisplayAngleFromXZ = function(x, z) {
