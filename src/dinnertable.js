@@ -14,6 +14,8 @@ var DinnerTable = function(options) {
     objectUtil.initWithDefaults(this, defaults, options);
 
     this.origin = new THREE.Object3D();
+    this.origin.position.x = this.x;
+    this.origin.position.z = this.z;
     
     //this.leg = TableLeg.model.clone();
     //this.origin.add(this.leg);
@@ -21,8 +23,8 @@ var DinnerTable = function(options) {
     var boxGeometry = new THREE.BoxGeometry(this.width, 1, this.depth);
     var material = Level.dinnerTableMaterial;
     var box = new THREE.Mesh(boxGeometry, material);
-    box.position.x = this.x + this.width * 0.5;
-    box.position.z = this.z + this.depth * 0.5;
+    box.position.x = this.width * 0.5;
+    box.position.z = this.depth * 0.5;
     box.position.y = 0.5;
     box.castShadow = true;
     box.receiveShadow = true;
@@ -37,3 +39,39 @@ var DinnerTable = function(options) {
 };
 
 DinnerTable.prototype = new GJS.ThreeSceneObject();
+
+/**
+ * @constructor
+ */
+var Chair = function(options) {
+    var defaults = {
+        level: null,
+        table: null,
+        x: 0,
+        z: 0
+    };
+    objectUtil.initWithDefaults(this, defaults, options);
+    
+    this.origin = new THREE.Object3D();
+    this.origin.position.x = this.x;
+    this.origin.position.z = this.z;
+    
+    var boxGeometry = new THREE.BoxGeometry(0.5, 0.7, 0.5);
+    var material = Level.chairMaterial;
+    var chairBox = new THREE.Mesh(boxGeometry, material);
+    chairBox.position.x = 0.5;
+    chairBox.position.z = 0.5;
+    chairBox.position.y = 0.35;
+    chairBox.castShadow = true;
+    chairBox.receiveShadow = true;
+    this.origin.add(chairBox);
+    
+    this.initThreeSceneObject({
+        object: this.origin,
+        sceneParent: options.sceneParent
+    });
+    
+    this.addToScene();
+};
+
+Chair.prototype = new GJS.ThreeSceneObject();

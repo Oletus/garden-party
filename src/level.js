@@ -59,6 +59,7 @@ var Level = function(options) {
 
     // Test level objects
     var dinnerTable = new DinnerTable({sceneParent: this.gardenParent, z: 2, x: 2, width: 2, depth: 3});
+    var chair = new Chair({sceneParent: this.gardenParent, z: 2, x: 4});
 
     // Note that we're using platforming physics, just without the gravity to resolve character collisions.
     this.collisionTileMap = new GJS.TileMap({
@@ -135,6 +136,7 @@ Level.State = {
 };
 
 Level.dinnerTableMaterial = new THREE.MeshPhongMaterial( { color: 0xeeeeee } );
+Level.chairMaterial = new THREE.MeshPhongMaterial( { color: 0xaa7733 } );
 Level.groundMaterial = new THREE.MeshPhongMaterial( { color: 0x66cc00 } );
 Level.colliderDebugMaterial = new THREE.MeshBasicMaterial( { color: 0xff0088, wireframe: true } );
 
