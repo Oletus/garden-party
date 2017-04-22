@@ -15,11 +15,19 @@ var LevelEditor = function(level, sceneParent) {
     this.editorCursor.addToScene();
 };
 
+LevelEditor.prototype.update = function(deltaTime) {
+    if (this.level.hoverTarget) {
+        this.editorCursor.gridX = Math.floor(this.level.hoverTarget.object.position.x);
+        this.editorCursor.gridZ = Math.floor(this.level.hoverTarget.object.position.z);
+    }
+    this.editorCursor.update(deltaTime);
+};
+
 var EditorCursor = function(options) {
     var defaults = {
         level: null,
         gridX: 0,
-        gridZ: 50,
+        gridZ: 0,
         color: 0xaaccff,
         y: 1.0
     };
@@ -46,14 +54,13 @@ EditorCursor.material = function(color, emissiveColor) {
 };
 
 EditorCursor.prototype.update = function(deltaTime) {
-    this.object.position.x = this.level.gridXToWorld(this.gridX);
-    this.object.position.z = this.level.gridZToWorld(this.gridZ);
-    this.object.position.y = this.y;
+    this.object.position.x = this.gridX + 0.5;
+    this.object.position.z = this.gridZ + 0.5;
     this.mesh.rotation.y += deltaTime;
 };
 
 EditorCursor.prototype.createMesh = function() {
-    var shape = GJS.utilTHREE.createSquareWithHoleShape(1.9, 1.5);
+    var shape = GJS.utilTHREE.createSquareWithHoleShape(1, 0.6);
     var line = new THREE.LineCurve3(new THREE.Vector3(0, -0.1, 0), new THREE.Vector3(0, 0.1, 0));
     var extrudeSettings = {
         steps: 1,

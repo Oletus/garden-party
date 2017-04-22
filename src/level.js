@@ -65,9 +65,12 @@ var Level = function(options) {
     });
     this.physicalCollisionTileMap = new GJS.PlatformingTileMap();
     this.physicalCollisionTileMap.init({tileMap: this.collisionTileMap});
-    
+
+    this.hoverTarget = null;
+
     if (DEV_MODE) {
         var colliderVisualizer = new THREE.Object3D();
+        this.colliderVisualizer = colliderVisualizer;  // Temporarily available to allow testing editor cursor raycasting
         for (var x = 0; x < this.collisionTileMap.width; ++x) {
             for (var z = 0; z < this.collisionTileMap.height; ++z) {
                 if (this.collisionTileMap.tiles[z][x].isWall()) {
@@ -84,15 +87,17 @@ var Level = function(options) {
     }
 
     if (DEV_MODE) {
-        window.editor = new LevelEditor(this, this.gardenParent);
+        this.editor = new LevelEditor(this, this.gardenParent);
     }
 };
 
 Level.prototype.canvasMove = function(viewportPos) {
     this.raycaster.setFromCamera(viewportPos, this.camera);
-    var intersects = this.raycaster.intersectObjects(this.gardenParent.children, true);
+    var intersects = this.raycaster.intersectObject(this.colliderVisualizer, true);
 
-    // TODO: Try just checking when it intersects the debug collision mesh
+    if (intersects.length > 0) {
+        this.hoverTarget = intersects[0];
+    }
 };
 
 Level.gridWidth = 17;
@@ -116,6 +121,10 @@ Level.prototype.update = function(deltaTime) {
 
     for (var i = 0; i < this.objects.length; ++i) {
         this.objects[i].update(deltaTime);
+    }
+
+    if (this.editor) {
+        this.editor.update(deltaTime);
     }
 };
 
