@@ -53,18 +53,21 @@ var Chair = function(options) {
     objectUtil.initWithDefaults(this, defaults, options);
     
     this.origin = new THREE.Object3D();
-    this.origin.position.x = this.x;
-    this.origin.position.z = this.z;
+    this.origin.position.x = this.x + 0.5;
+    this.origin.position.z = this.z + 0.5;
     
-    var boxGeometry = new THREE.BoxGeometry(0.5, 0.7, 0.5);
+    /*var boxGeometry = new THREE.BoxGeometry(0.5, 0.7, 0.5);
     var material = Level.chairMaterial;
     var chairBox = new THREE.Mesh(boxGeometry, material);
-    chairBox.position.x = 0.5;
-    chairBox.position.z = 0.5;
     chairBox.position.y = 0.35;
     chairBox.castShadow = true;
     chairBox.receiveShadow = true;
-    this.origin.add(chairBox);
+    this.origin.add(chairBox);*/
+    
+    var model = Chair.model.clone();
+    model.castShadow = true;
+    model.receiveShadow = true;
+    this.origin.add(model);
     
     this.initThreeSceneObject({
         object: this.origin,
@@ -75,3 +78,7 @@ var Chair = function(options) {
 };
 
 Chair.prototype = new GJS.ThreeSceneObject();
+
+GJS.utilTHREE.loadJSONModel('chair', function(object) {
+    Chair.model = object;
+});
