@@ -188,7 +188,7 @@ GJS.TileMap.prototype.getTilesInArea = function(tileMin, tileMax, matchFunc) {
     var tileCoords = this.getTileCoordsInArea(tileMin, tileMax, matchFunc);
     var tiles = [];
     for (var i = 0; i < tileCoords.length; ++i) {
-        tiles.push(this.tiles[tileCoords.y][tileCoords.x]);
+        tiles.push(this.tiles[tileCoords[i].y][tileCoords[i].x]);
     }
     return tiles;
 };
