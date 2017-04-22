@@ -50,22 +50,25 @@ var Level = function(options) {
     this.scenery.position.z = Level.gridDepth * 0.5;
     this.scene.add(this.scenery);
 
-    this.playerCharacter = new PlayerCharacter({sceneParent: this.gardenParent, x: 1.5, z: 1.5});
+    this.playerCharacter = new PlayerCharacter({level: this, sceneParent: this.gardenParent, x: 1.5, z: 1.5});
+    this.objects.push(this.playerCharacter);
 
     // Test level objects
     var dinnerTable = new DinnerTable({sceneParent: this.gardenParent, z: 2, x: 2, width: 2, depth: 3});
     
+    // Note that we're using platforming physics, just without the gravity to resolve character collisions.
     this.collisionTileMap = new GJS.TileMap({
         width: Level.gridWidth,
         height: Level.gridDepth,
-        initEdgeTile: function() {return 'x'}
+        initTile: function() { return new GJS.PlatformingTile(); },
+        initEdgeTile: function() {return new GJS.WallTile(); }
     });
     
     if (DEV_MODE) {
         var colliderVisualizer = new THREE.Object3D();
         for (var x = 0; x < this.collisionTileMap.width; ++x) {
             for (var z = 0; z < this.collisionTileMap.height; ++z) {
-                if (this.collisionTileMap.tiles[z][x] === 'x') {
+                if (this.collisionTileMap.tiles[z][x].isWall()) {
                     var boxGeometry = new THREE.BoxGeometry(1, 1, 1);
                     var tileColliderVisualizer = new THREE.Mesh(boxGeometry, Level.colliderDebugMaterial);
                     tileColliderVisualizer.position.y = 0.5;
