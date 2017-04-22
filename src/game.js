@@ -166,7 +166,8 @@ Game.parameters = new GJS.GameParameters({
     'muteAudio': {initial: false},
     'playerMoveSpeed': {initial: 5.0},
     'postProcessingEnabled': {initial: true},
-    'shadowsEnabled': {initial: true}
+    'shadowsEnabled': {initial: true},
+    'debugVisualizations': {initial: true}
 });
 
 var DEV_MODE = querystringUtil.get('devMode') !== undefined;

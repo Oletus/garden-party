@@ -20,18 +20,6 @@ var Level = function(options) {
     
     this.setupLights();
 
-    if (DEV_MODE) {
-        var axisHelper = new THREE.AxisHelper( 3.5 );
-        this.gardenParent.add( axisHelper );
-        var gridSize = Math.max(Level.gridWidth, Level.gridDepth);
-        var divisions = gridSize;
-        var gridHelper = new THREE.GridHelper(gridSize, divisions);
-        gridHelper.position.y = 0.1;
-        gridHelper.position.x = gridSize / 2;
-        gridHelper.position.z = gridSize / 2;
-        this.gardenParent.add(gridHelper);
-    }
-
     this.camera = new THREE.PerspectiveCamera( 40, this.cameraAspect, 1, 500000 );
     this.raycaster = new THREE.Raycaster();
     
@@ -79,7 +67,19 @@ var Level = function(options) {
 
     this.hoverTarget = null;
 
+    this.devModeVisualizationParent = new THREE.Object3D();
     if (DEV_MODE) {
+        this.gardenParent.add(this.devModeVisualizationParent);
+        var axisHelper = new THREE.AxisHelper( 3.5 );
+        this.devModeVisualizationParent.add( axisHelper );
+        var gridSize = Math.max(Level.gridWidth, Level.gridDepth);
+        var divisions = gridSize;
+        var gridHelper = new THREE.GridHelper(gridSize, divisions);
+        gridHelper.position.y = 0.1;
+        gridHelper.position.x = gridSize / 2;
+        gridHelper.position.z = gridSize / 2;
+        this.devModeVisualizationParent.add(gridHelper);
+        
         var colliderVisualizer = new THREE.Object3D();
         var colliderBoxGeometry = new THREE.BoxGeometry(1, 1, 1);
         for (var x = 0; x < this.collisionTileMap.width; ++x) {
@@ -93,7 +93,7 @@ var Level = function(options) {
                 }
             }
         }
-        this.gardenParent.add(colliderVisualizer);
+        this.devModeVisualizationParent.add(colliderVisualizer);
 
         // Add a box to every grid tile for raycasting the editor cursor in debug mode
         this.gridVisualizer = new THREE.Object3D();
@@ -112,7 +112,7 @@ var Level = function(options) {
             }
         }
 
-        this.gardenParent.add(this.gridVisualizer);
+        this.devModeVisualizationParent.add(this.gridVisualizer);
     }
 
     if (DEV_MODE) {
@@ -223,6 +223,7 @@ Level.prototype.initPostprocessing = function(renderer) {
 
 Level.prototype.render = function(renderer) {
     this.spotLight.castShadow = Game.parameters.get('shadowsEnabled');
+    this.devModeVisualizationParent.visible = Game.parameters.get('debugVisualizations');
     if (Game.parameters.get('postProcessingEnabled')) {
         if (this.effectComposer === null) {
             this.initPostprocessing(renderer);
