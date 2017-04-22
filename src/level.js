@@ -20,6 +20,12 @@ var Level = function(options) {
     if (DEV_MODE) {
         var axisHelper = new THREE.AxisHelper( 3.5 );
         this.gardenParent.add( axisHelper );
+        var gridSize = 15;
+        var divisions = 15;
+        var gridHelper = new THREE.GridHelper( gridSize, divisions );
+        gridHelper.position.x = gridSize / 2;
+        gridHelper.position.z = gridSize / 2;
+        this.gardenParent.add( gridHelper );
     }
 
     this.camera = new THREE.PerspectiveCamera( 40, this.cameraAspect, 1, 500000 );
@@ -66,5 +72,5 @@ Level.prototype.render = function(renderer) {
 };
 
 Level.prototype.getLookAtCenter = function() {
-    return new THREE.Vector3(0.0, 0.0, 0.0);
+    return new THREE.Vector3(7.5, 0.0, 7.5);
 };
