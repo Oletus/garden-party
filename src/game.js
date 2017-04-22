@@ -16,8 +16,10 @@ var Game = function(resizer, renderer, loadingBar) {
 
     var numPlayers = 1;
     this.input = new GJS.InputMapper(this, numPlayers);
-    // Example usage of GJS.InputMapper
-    //this.input.addListener(GJS.Gamepad.BUTTONS.UP_OR_ANALOG_UP, ['up', 'w'], this.upPress, this.upRelease);
+    this.input.addListener(GJS.Gamepad.BUTTONS.UP_OR_ANALOG_UP, ['up', 'w'], this.upPress, this.upRelease);
+    this.input.addListener(GJS.Gamepad.BUTTONS.UP_OR_ANALOG_UP, ['down', 's'], this.downPress, this.downRelease);
+    this.input.addListener(GJS.Gamepad.BUTTONS.UP_OR_ANALOG_UP, ['right', 'd'], this.rightPress, this.rightRelease);
+    this.input.addListener(GJS.Gamepad.BUTTONS.UP_OR_ANALOG_UP, ['left', 'a'], this.leftPress, this.leftRelease);
     
     if (DEV_MODE) {
         this.input.addListener(undefined, ['0'], this.devModeTakeScreenshot);
@@ -63,6 +65,53 @@ Game.prototype.update = function(deltaTime) {
     }
 };
 
+Game.prototype.upPress = function() {
+    if (this.level) {
+        this.level.playerCharacter.zMoveIntent += 1.0;
+    }
+};
+
+Game.prototype.downPress = function() {
+    if (this.level) {
+        this.level.playerCharacter.zMoveIntent -= 1.0;
+    }
+};
+
+Game.prototype.upRelease = function() {
+    if (this.level) {
+        this.level.playerCharacter.zMoveIntent -= 1.0;
+    }
+};
+
+Game.prototype.downRelease = function() {
+    if (this.level) {
+        this.level.playerCharacter.zMoveIntent += 1.0;
+    }
+};
+
+Game.prototype.rightPress = function() {
+    if (this.level) {
+        this.level.playerCharacter.xMoveIntent -= 1.0;
+    }
+};
+
+Game.prototype.leftPress = function() {
+    if (this.level) {
+        this.level.playerCharacter.xMoveIntent += 1.0;
+    }
+};
+
+Game.prototype.rightRelease = function() {
+    if (this.level) {
+        this.level.playerCharacter.xMoveIntent += 1.0;
+    }
+};
+
+Game.prototype.leftRelease = function() {
+    if (this.level) {
+        this.level.playerCharacter.xMoveIntent -= 1.0;
+    }
+};
 
 /**
  * Mouse/touch handler for pressing down a mouse button or touch.
@@ -116,7 +165,8 @@ Game.prototype.devModeTakeScreenshot = function() {
 
 // Parameters added here can be tuned at run time when in developer mode
 Game.parameters = new GJS.GameParameters({
-    'muteAudio': {initial: false}
+    'muteAudio': {initial: false},
+    'playerMoveSpeed': {initial: 5.0}
 });
 
 var DEV_MODE = querystringUtil.get('devMode') !== undefined;

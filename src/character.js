@@ -72,8 +72,10 @@ PlayerPhysicsShim.prototype.getPositionedCollisionRect = function(x, y) {
 var PlayerCharacter = function(options) {
     this.initCharacter(options);
     var defaults = {
-        level: null
+        xMoveIntent: 0,
+        zMoveIntent: 0
     };
+    objectUtil.initWithDefaults(this, defaults, options);
     
     // The physics class we're using handles movement in terms of x / y. However we're using three.js x / z coordinates.
     this.physicsShim = new PlayerPhysicsShim({x: this.x, y: this.z});
@@ -84,8 +86,16 @@ PlayerCharacter.prototype = new Character();
 PlayerCharacter.prototype.update = function(deltaTime) {
     Character.prototype.update.call(this, deltaTime);
 
-    this.physicsShim.dx = 0.0;
-    this.physicsShim.dy = 1.0;
+    this.physicsShim.dx = mathUtil.clamp(-1.0, 1.0, this.xMoveIntent);
+    this.physicsShim.dy = mathUtil.clamp(-1.0, 1.0, this.zMoveIntent);
+    // Normalize the movement speed: Make sure that diagonal movement speed is the same as horizontal/vertical.
+    if (this.physicsShim.dx != 0.0 && this.physicsShim.dy != 0.0) {
+        var movementMult = 1.0 / Math.sqrt(Math.pow(this.physicsShim.dx, 2) + Math.pow(this.physicsShim.dy, 2));
+        this.physicsShim.dx *= movementMult;
+        this.physicsShim.dy *= movementMult;
+    }
+    this.physicsShim.dx *= Game.parameters.get('playerMoveSpeed')
+    this.physicsShim.dy *= Game.parameters.get('playerMoveSpeed')
     GJS.PlatformingPhysics.moveAndCollide(this.physicsShim, deltaTime, 'x', [this.level.physicalCollisionTileMap]);
     GJS.PlatformingPhysics.moveAndCollide(this.physicsShim, deltaTime, 'y', [this.level.physicalCollisionTileMap]);
     

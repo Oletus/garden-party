@@ -37,9 +37,9 @@ var Level = function(options) {
     this.cameraControl = new GJS.OrbitCameraControl({
         camera: this.camera,
         lookAt: this.getLookAtCenter(),
-        y: 5,
+        y: 15,
         relativeY: false,
-        orbitAngle: Math.PI * 0.9
+        orbitAngle: Math.PI * 1.5
     });
     
     // TODO: Temporary ground, replace with scenery.
@@ -113,9 +113,6 @@ Level.prototype.update = function(deltaTime) {
     this.state.update(deltaTime);
     this.cameraControl.update(deltaTime);
     this.cameraControl.setLookAt(this.getLookAtCenter());
-
-    // TODO: Remove this. Here just to test the rendering.
-    this.cameraControl.moveOrbitAngle(deltaTime * 0.1);
 
     for (var i = 0; i < this.objects.length; ++i) {
         this.objects[i].update(deltaTime);
