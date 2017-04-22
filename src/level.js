@@ -8,7 +8,8 @@ var Level = function(options) {
         game: null,
         width: 5,
         depth: 5,
-        cameraAspect: 16 / 9
+        cameraAspect: 16 / 9,
+        levelSpec: levelData.data['1']
     };
     objectUtil.initWithDefaults(this, defaults, options);
     
@@ -53,8 +54,9 @@ var Level = function(options) {
     this.gardenParent.add(this.tileEditorObjectParent);
     this.tileEditorObjects = [];
 
-    // TODO: Load level
-    // this.generateTileEditorObjectsFromTiles();
+    var parsedSpec = JSON.parse(this.levelSpec);
+    this.tiledata = parsedSpec['tiledata'];
+    this.generateTileEditorObjectsFromTiles(Level.tilemapFromData(this.tiledata));
     this.updateCollisionGridFromObjects();
     
     this.reinitGuests();
@@ -104,6 +106,20 @@ var Level = function(options) {
     }
 
     this.effectComposer = null;
+};
+
+Level.tilemapFromData = function(tiledata) {
+    return new GJS.TileMap({
+        width: tiledata[0].length,
+        height: tiledata.length,
+        initTile: GJS.TileMap.initFromData(tiledata)
+    });
+};
+
+Level.prototype.getSpec = function() {
+    return JSON.stringify({
+        'tiledata': this.tiledata
+    });
 };
 
 /**
@@ -270,6 +286,7 @@ Level.prototype.update = function(deltaTime) {
 
     if (this.editor) {
         this.editor.update(deltaTime);
+        this.tiledata = this.editor.getTileData();
     }
 };
 

@@ -12,11 +12,15 @@ var LevelEditor = function(level, sceneParent) {
         y: this.chosenY + 0.7
     });
     
-    this.tilemap = new GJS.TileMap({
-        width: Level.gridWidth,
-        height: Level.gridDepth,
-        initTile: function() { return ''; }
-    });
+    if (this.level.tiledata) {
+        this.tilemap = Level.tilemapFromData(this.level.tiledata);
+    } else {
+        this.tilemap = new GJS.TileMap({
+            width: Level.gridWidth,
+            height: Level.gridDepth,
+            initTile: function() { return ' '; }
+        });
+    }
 
     this.editorCursor.addToScene();
 };
@@ -29,7 +33,21 @@ LevelEditor.prototype.update = function(deltaTime) {
     this.editorCursor.update(deltaTime);
 };
 
+LevelEditor.prototype.getTileData = function() {
+    return this.tilemap.tiles;
+};
+
+LevelEditor.prototype.save = function() {
+    var blob = new Blob([this.level.getSpec()], {type: 'text/plain'});
+    saveAs(blob, 'level.txt');
+};
+
 LevelEditor.prototype.keyPress = function(key) {
+    if (key === 'ctrl+s') {
+        this.save();
+        return;
+    }
+    
     var tileWas = this.tilemap.tiles[this.editorCursor.gridZ][this.editorCursor.gridX];
     this.tilemap.tiles[this.editorCursor.gridZ][this.editorCursor.gridX] = key;
     this.level.removeObjects(this.level.tileEditorObjects);
