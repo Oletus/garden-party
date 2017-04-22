@@ -175,9 +175,6 @@ var DEV_MODE = querystringUtil.get('devMode') !== undefined;
 window['start'] = function() {
     var DEBUG_MAIN_LOOP = DEV_MODE && true; // Set to true to allow fast-forwarding main loop with 'f'
     Game.parameters.set('muteAudio', (DEV_MODE && true)); // Set to true if sounds annoy developers
-    if (DEV_MODE) {
-        Game.parameters.initGUI();
-    }
     
     var game;
     
@@ -212,6 +209,12 @@ window['start'] = function() {
             }
         }
     });
+
+    // Initialize after CanvasResizer so it is always drawn on top
+    if (DEV_MODE) {
+        Game.parameters.initGUI();
+    }
+
     var loadingBar = new GJS.LoadingBar();
     game = new Game(resizer, renderer, loadingBar);
     
