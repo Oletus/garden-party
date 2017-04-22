@@ -237,10 +237,11 @@ Level.prototype.initPostprocessing = function(renderer) {
     // TODO: Should the depth render target be resized on canvas resize?
     this.depthRenderTarget = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, pars );
     this.depthRenderTarget.texture.name = "SSAOShader.rt";
+    
+    this.aaPass = new THREE.SMAAPass( window.innerWidth, window.innerHeight );
 
     // Setup SSAO pass
     this.ssaoPass = new THREE.ShaderPass( THREE.SSAOShader );
-    this.ssaoPass.renderToScreen = true;
     //this.ssaoPass.uniforms[ "tDiffuse" ].value will be set by ShaderPass
     this.ssaoPass.uniforms[ "tDepth" ].value = this.depthRenderTarget.texture;
     this.ssaoPass.uniforms[ 'size' ].value.set( window.innerWidth, window.innerHeight );
@@ -254,6 +255,9 @@ Level.prototype.initPostprocessing = function(renderer) {
     this.effectComposer = new THREE.EffectComposer( renderer );
     this.effectComposer.addPass( renderPass );
     this.effectComposer.addPass( this.ssaoPass );
+    this.ssaoPass.renderToScreen = false;
+    this.effectComposer.addPass( this.aaPass );
+    this.aaPass.renderToScreen = true;
 };
 
 Level.prototype.render = function(renderer) {
