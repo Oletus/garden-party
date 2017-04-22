@@ -81,7 +81,8 @@ var Chair = function(options) {
         table: null,
         x: 0,
         z: 0,
-        direction: new Vec2(1, 0)
+        direction: new Vec2(1, 0),
+        sitter: null
     };
     objectUtil.initWithDefaults(this, defaults, options);
     

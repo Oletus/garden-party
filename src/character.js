@@ -20,6 +20,10 @@ Character.prototype.initCharacter = function(options) {
     };
     objectUtil.initWithDefaults(this, defaults, options);
 
+    if (this.sittingOn !== null) {
+        this.sitOn(this.sittingOn);
+    }
+    
     this.size = 0.5;
     
     // The center is at the feet of the character.
@@ -87,6 +91,16 @@ Character.prototype.setCarriedBy = function(carriedBy) {
     }
 };
 
+Character.prototype.sitOn = function(chair) {
+    if (this.sittingOn !== null) {
+        this.sittingOn.sitter = null;
+    }
+    this.x = chair.x + 0.5;
+    this.z = chair.z + 0.5;
+    this.sittingOn = chair;
+    chair.sitter = this;
+};
+
 Character.prototype.setDisplayAngleFromXZ = function(x, z) {
     this.center.rotation.y = Math.atan2(x, z) + Math.PI;
 };
@@ -113,6 +127,16 @@ Character.prototype.getNearest = function(fromSet, matchFunc) {
 Character.prototype.pickUpObject = function(object) {
     object.setCarriedBy(this);
     this.carrying = object;
+    if (object.sittingOn) {
+        object.sittingOn.sitter = null;
+        object.sittingOn = null;
+    }
+};
+
+Character.prototype.dropObjectOnChair = function(chair) {
+    this.carrying.sitOn(chair);
+    this.carrying.setCarriedBy(null);
+    this.carrying = null;
 };
 
 
@@ -185,7 +209,12 @@ PlayerCharacter.prototype.update = function(deltaTime) {
 
 PlayerCharacter.prototype.tryPickUpOrDrop = function() {
     if (this.carrying !== null) {
-        
+        if (this.carrying instanceof Character) {
+            var nearest = this.getNearest(this.level.getChairs(), function(chair) { return chair.sitter === null; });
+            if (nearest !== null && this.distance(nearest) < 1.5) {
+                this.dropObjectOnChair(nearest);
+            }
+        }
     } else {
         var nearest = this.getNearest(this.level.guests, function(guest) { return guest.canBePickedUp; });
         if (nearest !== null && this.distance(nearest) < 1.5) {

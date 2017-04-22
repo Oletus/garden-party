@@ -199,14 +199,19 @@ Level.prototype.updateColliderVisualizer = function() {
     }
 };
 
-Level.prototype.reinitGuests = function() {
-    this.removeObjects(this.guests);
+Level.prototype.getChairs = function() {
     var chairs = [];
     for (var i = 0; i < this.objects.length; ++i) {
         if (this.objects[i] instanceof Chair) {
             chairs.push(this.objects[i]);
         }
     }
+    return chairs;
+};
+
+Level.prototype.reinitGuests = function() {
+    this.removeObjects(this.guests);
+    var chairs = this.getChairs();
     var guestsCount = chairs.length - 2;
     var chairsToPopulate = arrayUtil.randomSubset(chairs, guestsCount);
     for (var i = 0; i < chairsToPopulate.length; ++i) {
@@ -214,8 +219,6 @@ Level.prototype.reinitGuests = function() {
         var guest = new Guest({
             level: this,
             sceneParent: this.gardenParent,
-            x: chair.x + 0.5,
-            z: chair.z + 0.5,
             sittingOn: chair
         });
         this.guests.push(guest);
