@@ -30,11 +30,16 @@ Character.prototype.initCharacter = function(options) {
     var boxGeometry = new THREE.BoxGeometry(this.size, 2, this.size);
     var box = new THREE.Mesh(boxGeometry, Level.dinnerTableMaterial);
     box.position.y = 1;
+    box.castShadow = true;
+    box.receiveShadow = true;
     this.center.add(box);
-    var boxGeometry = new THREE.BoxGeometry(1.0, 0.1, 0.1);
-    var nose = new THREE.Mesh(boxGeometry, Level.dinnerTableMaterial);
+
+    var noseGeometry = new THREE.BoxGeometry(1.0, 0.1, 0.1);
+    var nose = new THREE.Mesh(noseGeometry, Level.dinnerTableMaterial);
     nose.position.y = 1.5;
     nose.position.x = 0.5;
+    nose.castShadow = true;
+    nose.receiveShadow = true;
     this.center.add(nose);
     
     this.initThreeSceneObject({

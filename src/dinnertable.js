@@ -24,6 +24,8 @@ var DinnerTable = function(options) {
     box.position.x = this.x + this.width * 0.5;
     box.position.z = this.z + this.depth * 0.5;
     box.position.y = 0.5;
+    box.castShadow = true;
+    box.receiveShadow = true;
     this.origin.add(box);
     
     this.initThreeSceneObject({

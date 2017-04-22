@@ -17,6 +17,8 @@ var Level = function(options) {
     this.gardenParent = new THREE.Object3D(); // Corner of the garden. At ground level.
     this.scene.add(this.gardenParent);
     
+    this.setupLights();
+    
     if (DEV_MODE) {
         var axisHelper = new THREE.AxisHelper( 3.5 );
         this.gardenParent.add( axisHelper );
@@ -48,6 +50,8 @@ var Level = function(options) {
     this.scenery = new THREE.Mesh(groundGeometry, Level.groundMaterial);
     this.scenery.position.x = Level.gridWidth * 0.5;
     this.scenery.position.z = Level.gridDepth * 0.5;
+    this.scenery.castShadow = true;
+    this.scenery.receiveShadow = true;
     this.scene.add(this.scenery);
 
     this.playerCharacter = new PlayerCharacter({level: this, sceneParent: this.gardenParent, x: 1.5, z: 1.5});
@@ -110,14 +114,16 @@ Level.State = {
     FAIL: 3
 };
 
-Level.dinnerTableMaterial = new THREE.MeshBasicMaterial( { color: 0xeeeeee } );
-Level.groundMaterial = new THREE.MeshBasicMaterial( { color: 0x66cc00 } );
+Level.dinnerTableMaterial = new THREE.MeshPhongMaterial( { color: 0xeeeeee } );
+Level.groundMaterial = new THREE.MeshPhongMaterial( { color: 0x66cc00 } );
 Level.colliderDebugMaterial = new THREE.MeshBasicMaterial( { color: 0xff0088, wireframe: true } );
 
 Level.prototype.update = function(deltaTime) {
     this.state.update(deltaTime);
+
     this.cameraControl.update(deltaTime);
     this.cameraControl.setLookAt(this.getLookAtCenter());
+    this.cameraControl.set
 
     for (var i = 0; i < this.objects.length; ++i) {
         this.objects[i].update(deltaTime);
@@ -134,4 +140,38 @@ Level.prototype.render = function(renderer) {
 
 Level.prototype.getLookAtCenter = function() {
     return new THREE.Vector3(Level.gridWidth * 0.5, 0.0, Level.gridDepth * 0.5);
+};
+
+Level.prototype.setupLights = function() {
+    this.scene.add(new THREE.AmbientLight(0x333333));
+    var mainLight = new THREE.DirectionalLight(0xaaa588, 1);
+    mainLight.position.set(0.5, 1, -1).normalize();
+    this.scene.add(mainLight);
+    
+    var spotLight = new THREE.SpotLight(0x665555, 1, 0, Math.PI * 0.15);
+    this.spotLight = spotLight;
+    spotLight.position.set( 125, 250, -250 );
+    spotLight.target = new THREE.Object3D();
+    this.scene.add(spotLight.target);
+    this.updateSpotLightTarget();
+
+    spotLight.castShadow = true;
+    var shadowFovDegrees = 3;
+    spotLight.shadow = new THREE.LightShadow( new THREE.PerspectiveCamera( shadowFovDegrees, 1, 100, 400 ) );
+    spotLight.shadow.bias = -0.0001;
+    spotLight.shadow.mapSize.width = 1024;
+    spotLight.shadow.mapSize.height = 1024;
+    this.scene.add( spotLight );
+    
+    /*var helper = new THREE.CameraHelper( spotLight.shadow.camera );
+    this.scene.add(helper);*/
+    
+    var fillLight = new THREE.DirectionalLight(0x333355, 1);
+    fillLight.position.set(-1, 1, 1).normalize();
+    this.scene.add(fillLight);
+};
+
+Level.prototype.updateSpotLightTarget = function() {
+    var spotTarget = this.getLookAtCenter();
+    this.spotLight.target.position.set(spotTarget.x, spotTarget.y, spotTarget.z);
 };

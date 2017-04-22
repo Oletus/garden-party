@@ -3,12 +3,10 @@
 var Game = function(resizer, renderer, loadingBar) {
     this.resizer = resizer;
     this.renderer = renderer;
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.setClearColor( 0xffffff, 1);
     this.loadingBar = loadingBar;
-
-    this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera( 75, resizer.canvas.width / resizer.canvas.height, 1, 10000 );
-    this.camera.position.z = 1000;
 
     this.time = 0;
     
@@ -180,7 +178,7 @@ window['start'] = function() {
     
     var game;
     
-    var renderer = new THREE.WebGLRenderer();
+    var renderer = new THREE.WebGLRenderer({antialias: true});
     var canvasWrapper = document.createElement('div');
     canvasWrapper.appendChild(renderer.domElement);
 
@@ -201,9 +199,9 @@ window['start'] = function() {
         height: 9,
         setCanvasSizeCallback: function(width, height) {
             renderer.setSize(width, height);
-            if (game !== undefined) {
-                game.camera.aspect = width / height;
-                game.camera.updateProjectionMatrix();
+            if (game !== undefined && game.level) {
+                game.level.camera.aspect = width / height;
+                game.level.camera.updateProjectionMatrix();
             }
         }
     });
