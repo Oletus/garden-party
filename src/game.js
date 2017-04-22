@@ -203,8 +203,9 @@ window['start'] = function() {
                 game.level.camera.aspect = width / height;
                 game.level.camera.updateProjectionMatrix();
                 if (game.level.effectComposer !== null) {
+                    game.level.effectComposer.setSize(width, height);
                     game.level.depthRenderTarget.setSize(width, height);
-                    game.level.ssaoPass.uniforms[ 'size' ].value.set( width, height );
+                    game.level.ssaoPass.uniforms[ 'size' ].value.set(width, height);
                 }
             }
         }
