@@ -15,9 +15,11 @@ var Game = function(resizer, renderer, loadingBar) {
     var numPlayers = 1;
     this.input = new GJS.InputMapper(this, numPlayers);
     this.input.addListener(GJS.Gamepad.BUTTONS.UP_OR_ANALOG_UP, ['up', 'w'], this.upPress, this.upRelease);
-    this.input.addListener(GJS.Gamepad.BUTTONS.UP_OR_ANALOG_UP, ['down', 's'], this.downPress, this.downRelease);
-    this.input.addListener(GJS.Gamepad.BUTTONS.UP_OR_ANALOG_UP, ['right', 'd'], this.rightPress, this.rightRelease);
-    this.input.addListener(GJS.Gamepad.BUTTONS.UP_OR_ANALOG_UP, ['left', 'a'], this.leftPress, this.leftRelease);
+    this.input.addListener(GJS.Gamepad.BUTTONS.DOWN_OR_ANALOG_DOWN, ['down', 's'], this.downPress, this.downRelease);
+    this.input.addListener(GJS.Gamepad.BUTTONS.RIGHT_OR_ANALOG_RIGHT, ['right', 'd'], this.rightPress, this.rightRelease);
+    this.input.addListener(GJS.Gamepad.BUTTONS.LEFT_OR_ANALOG_LEFT, ['left', 'a'], this.leftPress, this.leftRelease);
+    
+    this.input.addListener(GJS.Gamepad.BUTTONS.A, ['space'], this.spacePress);
     
     if (DEV_MODE) {
         this.input.addListener(undefined, ['c'], this.editorKeyPressFunction('c'));
@@ -120,6 +122,12 @@ Game.prototype.rightRelease = function() {
 Game.prototype.leftRelease = function() {
     if (this.level) {
         this.level.playerCharacter.xMoveIntent -= 1.0;
+    }
+};
+
+Game.prototype.spacePress = function() {
+    if (this.level) {
+        this.level.playerCharacter.tryPickUpOrDrop();
     }
 };
 

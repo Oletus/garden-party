@@ -13,7 +13,10 @@ Character.prototype.initCharacter = function(options) {
         level: null,
         x: 0.5,
         z: 0.5,
-        sittingOn: null
+        sittingOn: null,
+        carriedBy: null,
+        carrying: null,
+        canBePickedUp: true
     };
     objectUtil.initWithDefaults(this, defaults, options);
 
@@ -54,11 +57,62 @@ Character.prototype.initCharacter = function(options) {
 Character.prototype.update = function(deltaTime) {
     if (this.sittingOn) {
         this.setDisplayAngleFromXZ(this.sittingOn.direction.x, this.sittingOn.direction.y);
+    } else if (this.carriedBy) {
+        this.x = this.carriedBy.x;
+        this.z = this.carriedBy.z;
+    }
+};
+
+Character.prototype.setCarriedBy = function(carriedBy) {
+    if (this.carriedBy !== carriedBy) {
+        this.removeFromScene();
+        if (carriedBy) {
+            this.sceneParent = carriedBy.center;
+            this.center.position.y = 2.2;
+            this.center.rotation.x = Math.PI * 0.5;
+            this.center.rotation.y = 0.0;
+            this.center.position.z = -1.0;
+            this.center.position.x = 0.0;
+            this.canBePickedUp = false;
+        } else {
+            this.sceneParent = this.level.gardenParent;
+            this.center.position.y = 0.0;
+            this.center.rotation.x = 0.0;
+            this.center.position.x = this.x;
+            this.center.position.z = this.z;
+            this.canBePickedUp = true;
+        }
+        this.carriedBy = carriedBy;
+        this.addToScene();
     }
 };
 
 Character.prototype.setDisplayAngleFromXZ = function(x, z) {
     this.center.rotation.y = Math.atan2(x, z) + Math.PI;
+};
+
+Character.prototype.distance = function(other) {
+    var thisVec = new Vec2(this.x, this.z);
+    var otherVec = new Vec2(other.x, other.z);
+    return thisVec.distance(otherVec);
+};
+
+Character.prototype.getNearest = function(fromSet, matchFunc) {
+    var nearest = null;
+    for (var i = 0; i < fromSet.length; ++i) {
+        var candidate = fromSet[i];
+        if (matchFunc(candidate)) {
+            if (nearest === null || this.distance(candidate) < this.distance(nearest)) {
+                nearest = candidate;
+            }
+        }
+    }
+    return nearest;
+};
+
+Character.prototype.pickUpObject = function(object) {
+    object.setCarriedBy(this);
+    this.carrying = object;
 };
 
 
@@ -127,4 +181,15 @@ PlayerCharacter.prototype.update = function(deltaTime) {
     this.z = this.physicsShim.y;
     this.center.position.x = this.x;
     this.center.position.z = this.z;
+};
+
+PlayerCharacter.prototype.tryPickUpOrDrop = function() {
+    if (this.carrying !== null) {
+        
+    } else {
+        var nearest = this.getNearest(this.level.guests, function(guest) { return guest.canBePickedUp; });
+        if (nearest !== null && this.distance(nearest) < 1.5) {
+            this.pickUpObject(nearest);
+        }
+    }
 };
