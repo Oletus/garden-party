@@ -18,7 +18,7 @@ var Level = function(options) {
     this.scene.add(this.gardenParent);
     
     this.setupLights();
-    
+
     if (DEV_MODE) {
         var axisHelper = new THREE.AxisHelper( 3.5 );
         this.gardenParent.add( axisHelper );
@@ -75,7 +75,6 @@ var Level = function(options) {
     if (DEV_MODE) {
         var colliderVisualizer = new THREE.Object3D();
         var colliderBoxGeometry = new THREE.BoxGeometry(1, 1, 1);
-        this.colliderVisualizer = colliderVisualizer;  // Temporarily available to allow testing editor cursor raycasting
         for (var x = 0; x < this.collisionTileMap.width; ++x) {
             for (var z = 0; z < this.collisionTileMap.height; ++z) {
                 if (this.collisionTileMap.tiles[z][x].isWall()) {
@@ -88,6 +87,25 @@ var Level = function(options) {
             }
         }
         this.gardenParent.add(colliderVisualizer);
+
+        // Add a box to every grid tile for raycasting the editor cursor in debug mode
+        this.gridVisualizer = new THREE.Object3D();
+
+        var planeGeometry = new THREE.BoxGeometry(1, 1, 0.1);
+        var invisibleMaterial = new THREE.Material();
+        invisibleMaterial.visible = false;
+
+        for (var x = 0; x < Level.gridWidth; ++x) {
+            for (var z = 0; z < Level.gridDepth; ++z) {
+                var invisibleMesh = new THREE.Mesh(planeGeometry, invisibleMaterial);
+                invisibleMesh.position.y = 0;
+                invisibleMesh.position.x = x + 0.5;
+                invisibleMesh.position.z = z + 0.5;
+                this.gridVisualizer.add(invisibleMesh);
+            }
+        }
+
+        this.gardenParent.add(this.gridVisualizer);
     }
 
     if (DEV_MODE) {
@@ -96,11 +114,13 @@ var Level = function(options) {
 };
 
 Level.prototype.canvasMove = function(viewportPos) {
-    this.raycaster.setFromCamera(viewportPos, this.camera);
-    var intersects = this.raycaster.intersectObject(this.colliderVisualizer, true);
+    if (DEV_MODE) {
+        this.raycaster.setFromCamera(viewportPos, this.camera);
+        var intersects = this.raycaster.intersectObject(this.gridVisualizer, true);
 
-    if (intersects.length > 0) {
-        this.hoverTarget = intersects[0];
+        if (intersects.length > 0) {
+            this.hoverTarget = intersects[0];
+        }
     }
 };
 
@@ -147,7 +167,7 @@ Level.prototype.setupLights = function() {
     var mainLight = new THREE.DirectionalLight(0xaaa588, 1);
     mainLight.position.set(0.5, 1, -1).normalize();
     this.scene.add(mainLight);
-    
+
     var spotLight = new THREE.SpotLight(0x665555, 1, 0, Math.PI * 0.15);
     this.spotLight = spotLight;
     spotLight.position.set( 125, 250, -250 );
@@ -162,10 +182,10 @@ Level.prototype.setupLights = function() {
     spotLight.shadow.mapSize.width = 1024;
     spotLight.shadow.mapSize.height = 1024;
     this.scene.add( spotLight );
-    
+
     /*var helper = new THREE.CameraHelper( spotLight.shadow.camera );
     this.scene.add(helper);*/
-    
+
     var fillLight = new THREE.DirectionalLight(0x333355, 1);
     fillLight.position.set(-1, 1, 1).normalize();
     this.scene.add(fillLight);
