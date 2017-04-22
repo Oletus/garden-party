@@ -7,12 +7,12 @@
 if (typeof GJS === "undefined") {
     var GJS = {};
 }
- 
+
 /**
  * A 2D grid made out of tiles. Tiles can be of any type, but they are strings by default.
  * @constructor
  */
-GJS.TileMap = function(options) 
+GJS.TileMap = function(options)
 {
     var defaults = {
         width: 1,
@@ -25,7 +25,7 @@ GJS.TileMap = function(options)
     var tile;
     for (var y = 0; y < this.height; ++y) {
         var row = [];
-        for (var x = 0; x < this.width; ++x) {  
+        for (var x = 0; x < this.width; ++x) {
             if (this.initEdgeTile != null && (x == 0 || x == this.width - 1 || y == 0 || y == this.height - 1)) {
                 tile = this.initEdgeTile(x, y);
             } else {
@@ -140,7 +140,7 @@ GJS.TileMap.prototype.isTileInArea = function(tileMin, tileMax, matchFunc) {
                 return true;
             }
         }
-    }    
+    }
     return false;
 };
 
@@ -173,7 +173,7 @@ GJS.TileMap.prototype.getTilesInArea = function(tileMin, tileMax, matchFunc) {
                 tiles.push(this.tiles[y][x]);
             }
         }
-    }    
+    }
     return tiles;
 };
 
@@ -370,4 +370,86 @@ GJS.TileMap.prototype.overlapsTiles = function(rect, matchFunc) {
  */
 GJS.TileMap.prototype.getRect = function() {
     return new Rect(0.0, this.width, 0.0, this.height);
+};
+
+/**
+ * Return a list of Rect objects into which matching tiles have been grouped.
+ *
+ * The algorithm first searches horizontally and when the table ends it searches vertically
+ * to extend it.
+ *
+ * @param {function} matchFunc Gets passed a tile and returns true if it should be grouped.
+ * @return {Array.<Rect>} Rectangles into which all tiles are grouped.
+ */
+GJS.TileMap.prototype.groupTilesToRectangles = function(matchFunc) {
+    var row, tile;
+    var groups = [];
+    var currentHorizontalMatch = undefined;
+    var currentVerticalMatch = undefined;
+
+    for (var y = 0; y < this.tiles.length; ++y) {
+        row = this.tiles[y];
+        for (var x = 0; x < row.length; ++x) {
+            tile = row[x];
+            if (matchFunc(tile)) {
+                if (currentHorizontalMatch === undefined) {
+                    currentHorizontalMatch = x;
+                    currentVerticalMatch = y;
+                }
+            } else if (currentHorizontalMatch !== undefined) {
+                var groupToAdd = this._searchDownwards(x, y, currentHorizontalMatch, currentVerticalMatch, matchFunc);
+                var alreadyAdded = this._isDuplicate(groupToAdd, groups);
+
+                if (!alreadyAdded) {
+                    groups.push(groupToAdd);
+                }
+
+                currentHorizontalMatch = undefined;
+                currentVerticalMatch = undefined;
+            }
+        }
+
+        if (currentHorizontalMatch !== undefined) {
+            var groupToAdd = this._searchDownwards(x, y, currentHorizontalMatch, currentVerticalMatch, matchFunc);
+            var alreadyAdded = this._isDuplicate(groupToAdd, groups);
+
+            if (!alreadyAdded) {
+                groups.push(groupToAdd);
+            }
+
+            currentHorizontalMatch = undefined;
+            currentVerticalMatch = undefined;
+        }
+    }
+    return groups;
+};
+
+GJS.TileMap.prototype._searchDownwards = function(x, y, currentHorizontalMatch, currentVerticalMatch, matchFunc) {
+    for (var b = y + 1; b < this.tiles.length; ++b) {
+        var canExtendTableBelow = true;
+        for (var a = currentHorizontalMatch; a < x; ++a) {
+            if (!matchFunc(this.tiles[b][a])) {
+                canExtendTableBelow = false;
+                break;
+            }
+        }
+
+        if (canExtendTableBelow) {
+            currentVerticalMatch += 1;
+        } else {
+            break;
+        }
+    }
+
+    return new Rect(currentHorizontalMatch, x, y, currentVerticalMatch + 1);
+};
+
+GJS.TileMap.prototype._isDuplicate = function(group, groups) {
+    for (var i = 0; i < groups.length; ++i) {
+        if (group.intersectsRect(groups[i])) {
+            return true;
+        }
+    }
+
+    return false;
 };
