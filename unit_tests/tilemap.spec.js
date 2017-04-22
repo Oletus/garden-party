@@ -59,7 +59,7 @@ describe('TileMap', function() {
             expect(tileMap.groupTilesToRectangles(matchFunc)).toEqual([]);
         });
 
-        it('creates two groups for tables that cannot be grouped perfectly vertically', function() {
+        it('creates two groups for tiles that cannot be grouped perfectly vertically (v1)', function() {
             var tileMap = new GJS.TileMap({ width: 10, height: 10 });
             tileMap.tiles[5][2] = 1;
             tileMap.tiles[5][3] = 1;
@@ -68,6 +68,14 @@ describe('TileMap', function() {
             tileMap.tiles[7][1] = 1;
             tileMap.tiles[7][2] = 1;
             expect(tileMap.groupTilesToRectangles(matchFunc)).toEqual([new Rect(2, 4, 5, 7), new Rect(1, 3, 7, 8)]);
+        });
+
+        it('creates two groups for tiles that cannot be grouped perfectly vertically (v2)', function() {
+            var tileMap = new GJS.TileMap({ width: 10, height: 10 });
+            tileMap.tiles[5][3] = 1;
+            tileMap.tiles[6][2] = 1;
+            tileMap.tiles[6][3] = 1;
+            expect(tileMap.groupTilesToRectangles(matchFunc)).toEqual([new Rect(3, 4, 5, 7), new Rect(2, 3, 6, 7)]);
         });
     });
 });

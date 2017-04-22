@@ -375,8 +375,8 @@ GJS.TileMap.prototype.getRect = function() {
 /**
  * Return a list of Rect objects into which matching tiles have been grouped.
  *
- * The algorithm first searches horizontally and when the table ends it searches vertically
- * to extend it.
+ * The algorithm first searches horizontally and when the line of consecutive
+ * matching tiles ends it searches vertically to extend it.
  *
  * @param {function} matchFunc Gets passed a tile and returns true if it should be grouped.
  * @return {Array.<Rect>} Rectangles into which all tiles are grouped.
@@ -384,72 +384,56 @@ GJS.TileMap.prototype.getRect = function() {
 GJS.TileMap.prototype.groupTilesToRectangles = function(matchFunc) {
     var row, tile;
     var groups = [];
-    var currentHorizontalMatch = undefined;
-    var currentVerticalMatch = undefined;
+    var currentMatch = undefined;
+    
+    var inGroups = function(x, y) {
+        var searchVec2 = new Vec2(x + 0.5, y + 0.5);
+        for (var i = 0; i < groups.length; ++i) {
+            if (groups[i].containsVec2(searchVec2)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    var that = this;
+    
+    var expandDown = function(rect) {
+        var allmatch = true;
+        while (allmatch && rect.bottom < that.height) {
+            for (var x = rect.left; x < rect.right; ++x) {
+                if (!matchFunc(that.tiles[rect.bottom][x])) {
+                    allmatch = false;
+                    break;
+                }
+            }
+            if (allmatch) {
+                rect.bottom += 1;
+            }
+        }
+    };
 
     for (var y = 0; y < this.tiles.length; ++y) {
         row = this.tiles[y];
         for (var x = 0; x < row.length; ++x) {
             tile = row[x];
-            if (matchFunc(tile)) {
-                if (currentHorizontalMatch === undefined) {
-                    currentHorizontalMatch = x;
-                    currentVerticalMatch = y;
+            if (matchFunc(tile) && !inGroups(x, y)) {
+                if (currentMatch === undefined) {
+                    currentMatch = new Rect(x, x + 1, y, y + 1);
+                    groups.push(currentMatch);
+                } else {
+                    currentMatch.right += 1;
                 }
-            } else if (currentHorizontalMatch !== undefined) {
-                var groupToAdd = this._searchDownwards(x, y, currentHorizontalMatch, currentVerticalMatch, matchFunc);
-                var alreadyAdded = this._isDuplicate(groupToAdd, groups);
-
-                if (!alreadyAdded) {
-                    groups.push(groupToAdd);
-                }
-
-                currentHorizontalMatch = undefined;
-                currentVerticalMatch = undefined;
+            } else if (currentMatch !== undefined) {
+                expandDown(currentMatch);
+                currentMatch = undefined;
             }
         }
 
-        if (currentHorizontalMatch !== undefined) {
-            var groupToAdd = this._searchDownwards(x, y, currentHorizontalMatch, currentVerticalMatch, matchFunc);
-            var alreadyAdded = this._isDuplicate(groupToAdd, groups);
-
-            if (!alreadyAdded) {
-                groups.push(groupToAdd);
-            }
-
-            currentHorizontalMatch = undefined;
-            currentVerticalMatch = undefined;
+        if (currentMatch !== undefined) {
+            expandDown(currentMatch);
+            currentMatch = undefined;
         }
     }
     return groups;
-};
-
-GJS.TileMap.prototype._searchDownwards = function(x, y, currentHorizontalMatch, currentVerticalMatch, matchFunc) {
-    for (var b = y + 1; b < this.tiles.length; ++b) {
-        var canExtendTableBelow = true;
-        for (var a = currentHorizontalMatch; a < x; ++a) {
-            if (!matchFunc(this.tiles[b][a])) {
-                canExtendTableBelow = false;
-                break;
-            }
-        }
-
-        if (canExtendTableBelow) {
-            currentVerticalMatch += 1;
-        } else {
-            break;
-        }
-    }
-
-    return new Rect(currentHorizontalMatch, x, y, currentVerticalMatch + 1);
-};
-
-GJS.TileMap.prototype._isDuplicate = function(group, groups) {
-    for (var i = 0; i < groups.length; ++i) {
-        if (group.intersectsRect(groups[i])) {
-            return true;
-        }
-    }
-
-    return false;
 };
