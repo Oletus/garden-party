@@ -386,6 +386,37 @@ GJS.TileMap.prototype.getNearestTilesDownFromRect = function(rect, matchFunc, ma
     return tiles;
 };
 
+/**
+ * Searches for the nearest tile that matches along horizontal and vertical axes from searchTile.
+ * @param {Vec2} searchTile Integer coordinates for the tile to start searching from.
+ * @param {function} matchFunc Gets passed a tile and returns true if it matches.
+ */
+GJS.TileMap.prototype.getNearestTileDirection = function(searchTile, matchFunc) {
+    var direction = new Vec2(0, 0);
+    for (var distance = 1; distance < Math.max(this.width, this.height); distance++) {
+        if (searchTile.x + distance < this.width) {
+            if (matchFunc(this.tiles[searchTile.y][searchTile.x + distance])) {
+                return new Vec2(1, 0);
+            }
+        }
+        if (searchTile.x - distance >= 0) {
+            if (matchFunc(this.tiles[searchTile.y][searchTile.x - distance])) {
+                return new Vec2(-1, 0);
+            }
+        }
+        if (searchTile.y + distance < this.height) {
+            if (matchFunc(this.tiles[searchTile.y + distance][searchTile.x])) {
+                return new Vec2(0, 1);
+            }
+        }
+        if (searchTile.y - distance >= 0) {
+            if (matchFunc(this.tiles[searchTile.y - distance][searchTile.x])) {
+                return new Vec2(0, -1);
+            }
+        }
+    }
+    return direction;
+};
 
 /**
  * @return {boolean} True if matching tiles overlap the given rectangle.

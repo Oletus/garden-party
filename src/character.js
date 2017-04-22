@@ -23,6 +23,8 @@ Character.prototype.initCharacter = function(options) {
     this.center.position.x = this.x;
     this.center.position.z = this.z;
     
+    this.sittingOn = null;
+    
     //this.mesh = Characters[this.id].model.clone();
     //this.center.add(this.mesh);
 
@@ -34,10 +36,10 @@ Character.prototype.initCharacter = function(options) {
     box.receiveShadow = true;
     this.center.add(box);
 
-    var noseGeometry = new THREE.BoxGeometry(1.0, 0.1, 0.1);
+    var noseGeometry = new THREE.BoxGeometry(0.1, 0.1, 1.0);
     var nose = new THREE.Mesh(noseGeometry, Level.dinnerTableMaterial);
     nose.position.y = 1.5;
-    nose.position.x = 0.5;
+    nose.position.z = -0.5;
     nose.castShadow = true;
     nose.receiveShadow = true;
     this.center.add(nose);
@@ -51,11 +53,13 @@ Character.prototype.initCharacter = function(options) {
 };
 
 Character.prototype.update = function(deltaTime) {
-    
+    if (this.sittingOn) {
+        this.center.rotation.y = this.setDisplayAngleFromXZ(this.sittingOn.direction.x, this.sittingOn.direction.y);
+    }
 };
 
 Character.prototype.setDisplayAngleFromXZ = function(x, z) {
-    this.center.rotation.y = Math.atan2(x, z) - Math.PI * 0.5;
+    this.center.rotation.y = Math.atan2(x, z) + Math.PI;
 };
 
 

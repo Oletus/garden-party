@@ -80,13 +80,16 @@ var Chair = function(options) {
         level: null,
         table: null,
         x: 0,
-        z: 0
+        z: 0,
+        direction: new Vec2(1, 0)
     };
     objectUtil.initWithDefaults(this, defaults, options);
     
     this.origin = new THREE.Object3D();
     this.origin.position.x = this.x + 0.5;
     this.origin.position.z = this.z + 0.5;
+    
+    this.setDisplayAngleFromXZ(this.direction.x, this.direction.y);
     
     /*var boxGeometry = new THREE.BoxGeometry(0.5, 0.7, 0.5);
     var material = Level.chairMaterial;
@@ -113,6 +116,10 @@ Chair.prototype = new GridSceneObject();
 
 Chair.prototype.getColliderRect = function() {
     return new Rect(this.x, this.x + 1, this.z, this.z + 1);
+};
+
+Chair.prototype.setDisplayAngleFromXZ = function(x, z) {
+    this.origin.rotation.y = Math.atan2(x, z) + Math.PI;
 };
 
 GJS.utilTHREE.loadJSONModel('chair', function(object) {

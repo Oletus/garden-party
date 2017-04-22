@@ -124,13 +124,27 @@ Level.prototype.clearTileEditorObjects = function() {
 };
 
 Level.prototype.generateTileEditorObjectsFromTiles = function(tilemap) {
-    var tableRects = tilemap.groupTilesToRectangles(function(tile) { return tile == 't'; });
+    var isTable = function(tile) { return tile == 't'; };
+    var isChair = function(tile) { return tile == 'c'; };
+    var tableRects = tilemap.groupTilesToRectangles(isTable);
     for (var i = 0; i < tableRects.length; ++i) {
-        this.addTileEditorObject(new DinnerTable({sceneParent: this.tileEditorObjectParent, x: tableRects[i].left, z: tableRects[i].top, width: tableRects[i].width(), depth: tableRects[i].height()}));
+        this.addTileEditorObject(new DinnerTable({
+            sceneParent: this.tileEditorObjectParent,
+            x: tableRects[i].left,
+            z: tableRects[i].top,
+            width: tableRects[i].width(),
+            depth: tableRects[i].height()
+            }));
     }
-    var chairPositions = tilemap.getTileCoords(function(tile) { return tile == 'c'; });
+    var chairPositions = tilemap.getTileCoords(isChair);
     for (var i = 0; i < chairPositions.length; ++i) {
-        this.addTileEditorObject(new Chair({sceneParent: this.tileEditorObjectParent, x: chairPositions[i].x, z: chairPositions[i].y}));
+        var tableDirection = tilemap.getNearestTileDirection(chairPositions[i], isTable);
+        this.addTileEditorObject(new Chair({
+            sceneParent: this.tileEditorObjectParent,
+            x: chairPositions[i].x,
+            z: chairPositions[i].y,
+            direction: tableDirection
+            }));
     }
     this.updateCollisionGridFromObjects();
 };
