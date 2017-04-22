@@ -55,7 +55,7 @@ var Level = function(options) {
 
     // Test level objects
     var dinnerTable = new DinnerTable({sceneParent: this.gardenParent, z: 2, x: 2, width: 2, depth: 3});
-    
+
     // Note that we're using platforming physics, just without the gravity to resolve character collisions.
     this.collisionTileMap = new GJS.TileMap({
         width: Level.gridWidth,
@@ -80,6 +80,17 @@ var Level = function(options) {
         }
         this.gardenParent.add(colliderVisualizer);
     }
+
+    if (DEV_MODE) {
+        window.editor = new LevelEditor(this, this.gardenParent);
+    }
+};
+
+Level.prototype.canvasMove = function(viewportPos) {
+    this.raycaster.setFromCamera(viewportPos, this.camera);
+    var intersects = this.raycaster.intersectObjects(this.gardenParent.children, true);
+
+    // TODO: Try just checking when it intersects the debug collision mesh
 };
 
 Level.gridWidth = 17;

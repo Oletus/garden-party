@@ -1,6 +1,7 @@
 'use strict';
 
 var Game = function(resizer, renderer, loadingBar) {
+    this.resizer = resizer;
     this.renderer = renderer;
     this.renderer.setClearColor( 0xffffff, 1);
     this.loadingBar = loadingBar;
@@ -8,7 +9,7 @@ var Game = function(resizer, renderer, loadingBar) {
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera( 75, resizer.canvas.width / resizer.canvas.height, 1, 10000 );
     this.camera.position.z = 1000;
-    
+
     this.time = 0;
     
     this.initializedAfterLoad = false;
@@ -94,6 +95,16 @@ Game.prototype.canvasRelease = function(event) {
  *   index: Integer index of the pointer being tracked.
  */
 Game.prototype.canvasMove = function(event) {
+    if (this.level) {
+        this.level.canvasMove(this.viewportPos(event));
+    }
+};
+
+Game.prototype.viewportPos = function(event) {
+    var canvasPos = new Vec2(event.currentPosition.x, event.currentPosition.y);
+    canvasPos.x = 2 * canvasPos.x / this.resizer.canvas.width - 1;
+    canvasPos.y = 1 - 2 * canvasPos.y / this.resizer.canvas.height;
+    return new THREE.Vector3(canvasPos.x, canvasPos.y, 0);
 };
 
 /**
