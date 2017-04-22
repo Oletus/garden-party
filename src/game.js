@@ -26,7 +26,7 @@ var Game = function(resizer, renderer, loadingBar) {
 };
 
 Game.prototype.loadedInit = function() {
-    this.level = new Level({});
+    this.level = new Level({game: this});
 };
 
 Game.prototype.render = function() {
@@ -164,7 +164,9 @@ Game.prototype.devModeTakeScreenshot = function() {
 // Parameters added here can be tuned at run time when in developer mode
 Game.parameters = new GJS.GameParameters({
     'muteAudio': {initial: false},
-    'playerMoveSpeed': {initial: 5.0}
+    'playerMoveSpeed': {initial: 5.0},
+    'postProcessingEnabled': {initial: true},
+    'shadowsEnabled': {initial: true}
 });
 
 var DEV_MODE = querystringUtil.get('devMode') !== undefined;
@@ -202,6 +204,10 @@ window['start'] = function() {
             if (game !== undefined && game.level) {
                 game.level.camera.aspect = width / height;
                 game.level.camera.updateProjectionMatrix();
+                if (game.level.effectComposer !== null) {
+                    game.level.depthRenderTarget.setSize(width, height);
+                    game.level.ssaoPass.uniforms[ 'size' ].value.set( width, height );
+                }
             }
         }
     });

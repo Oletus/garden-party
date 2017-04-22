@@ -5,6 +5,7 @@
  */
 var Level = function(options) {
     var defaults = {
+        game: null,
         width: 5,
         depth: 5,
         cameraAspect: 16 / 9
@@ -117,6 +118,8 @@ var Level = function(options) {
     if (DEV_MODE) {
         this.editor = new LevelEditor(this, this.gardenParent);
     }
+
+    this.effectComposer = null;
 };
 
 /**
@@ -168,6 +171,11 @@ Level.chairMaterial = new THREE.MeshPhongMaterial( { color: 0xaa7733 } );
 Level.groundMaterial = new THREE.MeshPhongMaterial( { color: 0x66cc00 } );
 Level.colliderDebugMaterial = new THREE.MeshBasicMaterial( { color: 0xff0088, wireframe: true } );
 
+// Setup depth pass
+Level.depthMaterial = new THREE.MeshDepthMaterial();
+Level.depthMaterial.depthPacking = THREE.RGBADepthPacking;
+Level.depthMaterial.blending = THREE.NoBlending;
+
 Level.prototype.update = function(deltaTime) {
     this.state.update(deltaTime);
 
@@ -184,8 +192,51 @@ Level.prototype.update = function(deltaTime) {
     }
 };
 
+Level.prototype.initPostprocessing = function(renderer) {
+    // TODO: This should be done once per renderer init, not per level init.
+
+    // Setup render pass
+    var renderPass = new THREE.RenderPass( this.scene, this.camera );
+
+    var pars = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter };
+    // TODO: Should the depth render target be resized on canvas resize?
+    this.depthRenderTarget = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, pars );
+    this.depthRenderTarget.texture.name = "SSAOShader.rt";
+
+    // Setup SSAO pass
+    this.ssaoPass = new THREE.ShaderPass( THREE.SSAOShader );
+    this.ssaoPass.renderToScreen = true;
+    //this.ssaoPass.uniforms[ "tDiffuse" ].value will be set by ShaderPass
+    this.ssaoPass.uniforms[ "tDepth" ].value = this.depthRenderTarget.texture;
+    this.ssaoPass.uniforms[ 'size' ].value.set( window.innerWidth, window.innerHeight );
+    this.ssaoPass.uniforms[ 'cameraNear' ].value = this.camera.near;
+    this.ssaoPass.uniforms[ 'cameraFar' ].value = this.camera.far;
+    this.ssaoPass.uniforms[ 'onlyAO' ].value = false;
+    this.ssaoPass.uniforms[ 'aoClamp' ].value = 0.3;
+    this.ssaoPass.uniforms[ 'lumInfluence' ].value = 0.5;
+
+    // Add pass to effect composer
+    this.effectComposer = new THREE.EffectComposer( renderer );
+    this.effectComposer.addPass( renderPass );
+    this.effectComposer.addPass( this.ssaoPass );
+};
+
 Level.prototype.render = function(renderer) {
-    renderer.render(this.scene, this.camera);
+    this.spotLight.castShadow = Game.parameters.get('shadowsEnabled');
+    if (Game.parameters.get('postProcessingEnabled')) {
+        if (this.effectComposer === null) {
+            this.initPostprocessing(renderer);
+        }
+        // Render depth into depthRenderTarget
+        this.scene.overrideMaterial = Level.depthMaterial;
+        renderer.render( this.scene, this.camera, this.depthRenderTarget, true );
+
+        // Render renderPass and SSAO shaderPass
+        this.scene.overrideMaterial = null;
+        this.effectComposer.render();
+    } else {
+        renderer.render(this.scene, this.camera);
+    }
 };
 
 Level.prototype.getLookAtCenter = function() {
@@ -193,8 +244,8 @@ Level.prototype.getLookAtCenter = function() {
 };
 
 Level.prototype.setupLights = function() {
-    this.scene.add(new THREE.AmbientLight(0x333333));
-    var mainLight = new THREE.DirectionalLight(0xaaa588, 1);
+    this.scene.add(new THREE.AmbientLight(0x555555));
+    var mainLight = new THREE.DirectionalLight(0xaaa588, 0.7);
     mainLight.position.set(0.5, 1, -1).normalize();
     this.scene.add(mainLight);
 
