@@ -105,18 +105,20 @@ Character.prototype.setDisplayAngleFromXZ = function(x, z) {
     this.center.rotation.y = Math.atan2(x, z) + Math.PI;
 };
 
-Character.prototype.distance = function(other) {
-    var thisVec = new Vec2(this.x, this.z);
+Character.prototype.interactionDistance = function(other) {
+    var interactionPointDistance = 0.5;
+    var thisVec = new Vec2(this.x + Math.sin(this.center.rotation.y - Math.PI) * interactionPointDistance, 
+                           this.z + Math.cos(this.center.rotation.y - Math.PI) * interactionPointDistance);
     var otherVec = new Vec2(other.x, other.z);
     return thisVec.distance(otherVec);
 };
 
-Character.prototype.getNearest = function(fromSet, matchFunc) {
+Character.prototype.getNearestForInteraction = function(fromSet, matchFunc) {
     var nearest = null;
     for (var i = 0; i < fromSet.length; ++i) {
         var candidate = fromSet[i];
         if (matchFunc(candidate)) {
-            if (nearest === null || this.distance(candidate) < this.distance(nearest)) {
+            if (nearest === null || this.interactionDistance(candidate) < this.interactionDistance(nearest)) {
                 nearest = candidate;
             }
         }
@@ -224,14 +226,14 @@ PlayerCharacter.prototype.update = function(deltaTime) {
 PlayerCharacter.prototype.getPickUpInteractionObject = function() {
     if (this.carrying !== null) {
         if (this.carrying instanceof Character) {
-            var nearest = this.getNearest(this.level.getChairs(), function(chair) { return chair.sitter === null; });
-            if (nearest !== null && this.distance(nearest) < 1.5) {
+            var nearest = this.getNearestForInteraction(this.level.getChairs(), function(chair) { return chair.sitter === null; });
+            if (nearest !== null && this.interactionDistance(nearest) < 1.0) {
                 return nearest;
             }
         }
     } else {
-        var nearest = this.getNearest(this.level.guests, function(guest) { return guest.canBePickedUp; });
-        if (nearest !== null && this.distance(nearest) < 1.5) {
+        var nearest = this.getNearestForInteraction(this.level.guests, function(guest) { return guest.canBePickedUp; });
+        if (nearest !== null && this.interactionDistance(nearest) < 1.0) {
             return nearest;
         }
     }
