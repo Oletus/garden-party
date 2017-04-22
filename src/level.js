@@ -14,8 +14,13 @@ var Level = function(options) {
     this.state = new GJS.StateMachine({stateSet: Level.State, id: Level.State.INTRO});
     
     this.scene = new THREE.Scene();
-    this.gardenParent = new THREE.Object3D();
+    this.gardenParent = new THREE.Object3D(); // Corner of the garden. At ground level.
     this.scene.add(this.gardenParent);
+    
+    if (DEV_MODE) {
+        var axisHelper = new THREE.AxisHelper( 3.5 );
+        this.gardenParent.add( axisHelper );
+    }
 
     this.camera = new THREE.PerspectiveCamera( 40, this.cameraAspect, 1, 500000 );
     this.raycaster = new THREE.Raycaster();

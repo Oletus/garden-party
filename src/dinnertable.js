@@ -6,8 +6,10 @@
 var DinnerTable = function(options) {
     var defaults = {
         level: null,
+        x: 0,
+        z: 0,
         width: 2,
-        depth: 2
+        depth: 2,
     };
     objectUtil.initWithDefaults(this, defaults, options);
 
@@ -19,7 +21,9 @@ var DinnerTable = function(options) {
     var boxGeometry = new THREE.BoxGeometry(this.width, 1, this.depth);
     var material = Level.dinnerTableMaterial;
     var box = new THREE.Mesh(boxGeometry, material);
-    box.position.y = -1;
+    box.position.x = this.x + this.width * 0.5;
+    box.position.z = this.z + this.depth * 0.5;
+    box.position.y = 0.5;
     this.origin.add(box);
     
     this.initThreeSceneObject({
