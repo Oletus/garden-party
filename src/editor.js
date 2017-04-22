@@ -30,9 +30,15 @@ LevelEditor.prototype.update = function(deltaTime) {
 };
 
 LevelEditor.prototype.keyPress = function(key) {
+    var tileWas = this.tilemap.tiles[this.editorCursor.gridZ][this.editorCursor.gridX];
     this.tilemap.tiles[this.editorCursor.gridZ][this.editorCursor.gridX] = key;
-    this.level.clearTileEditorObjects();
+    this.level.removeObjects(this.level.tileEditorObjects);
     this.level.generateTileEditorObjectsFromTiles(this.tilemap);
+
+    // Reinit guests if chairs change
+    if ((key === 'c') !== (tileWas === 'c')) {
+        this.level.reinitGuests();
+    }
 };
 
 var EditorCursor = function(options) {

@@ -12,7 +12,8 @@ Character.prototype.initCharacter = function(options) {
     var defaults = {
         level: null,
         x: 0.5,
-        z: 0.5
+        z: 0.5,
+        sittingOn: null
     };
     objectUtil.initWithDefaults(this, defaults, options);
 
@@ -22,8 +23,6 @@ Character.prototype.initCharacter = function(options) {
     this.center = new THREE.Object3D();
     this.center.position.x = this.x;
     this.center.position.z = this.z;
-    
-    this.sittingOn = null;
     
     //this.mesh = Characters[this.id].model.clone();
     //this.center.add(this.mesh);
@@ -54,13 +53,20 @@ Character.prototype.initCharacter = function(options) {
 
 Character.prototype.update = function(deltaTime) {
     if (this.sittingOn) {
-        this.center.rotation.y = this.setDisplayAngleFromXZ(this.sittingOn.direction.x, this.sittingOn.direction.y);
+        this.setDisplayAngleFromXZ(this.sittingOn.direction.x, this.sittingOn.direction.y);
     }
 };
 
 Character.prototype.setDisplayAngleFromXZ = function(x, z) {
     this.center.rotation.y = Math.atan2(x, z) + Math.PI;
 };
+
+
+var Guest = function(options) {
+    this.initCharacter(options);
+};
+
+Guest.prototype = new Character(); 
 
 
 var PlayerPhysicsShim = function(options) {

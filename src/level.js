@@ -45,13 +45,19 @@ var Level = function(options) {
 
     this.playerCharacter = new PlayerCharacter({level: this, sceneParent: this.gardenParent, x: 1.5, z: 1.5});
     this.objects.push(this.playerCharacter);
+    
+    this.guests = [];
 
     // These contain all the objects that are generated from tile editor tiles, like tables and chairs.
     this.tileEditorObjectParent = new THREE.Object3D();
     this.gardenParent.add(this.tileEditorObjectParent);
     this.tileEditorObjects = [];
 
+    // TODO: Load level
+    // this.generateTileEditorObjectsFromTiles();
     this.updateCollisionGridFromObjects();
+    
+    this.reinitGuests();
 
     this.hoverTarget = null;
 
@@ -105,22 +111,21 @@ var Level = function(options) {
  */
 Level.prototype.addTileEditorObject = function(tileEditorObject) {
     this.tileEditorObjects.push(tileEditorObject);
+    this.objects.push(tileEditorObject);
     if (tileEditorObject.sceneParent !== this.tileEditorObjectParent) {
         console.log("Error: Tile editor objects should have tileEditorObjectParent as their scene parent!", tileEditorObject);
     }
 };
 
-Level.prototype.clearTileEditorObjects = function() {
-    for (var i = 0; i < this.tileEditorObjects.length; ++i) {
-        var objectIndex = this.objects.indexOf[this.tileEditorObjects[i]];
+Level.prototype.removeObjects = function(objectsToRemove) {
+    for (var i = 0; i < objectsToRemove.length; ++i) {
+        objectsToRemove[i].removeFromScene();
+        var objectIndex = this.objects.indexOf(objectsToRemove[i]);
         if (objectIndex >= 0) {
             this.objects.splice(objectIndex, 1);
         }
     }
-    this.tileEditorObjects.splice(0, this.tileEditorObjects.length);
-    while(this.tileEditorObjectParent.children.length > 0){ 
-        this.tileEditorObjectParent.remove(this.tileEditorObjectParent.children[0]);
-    }
+    objectsToRemove.splice(0, objectsToRemove.length);
 };
 
 Level.prototype.generateTileEditorObjectsFromTiles = function(tilemap) {
@@ -192,7 +197,31 @@ Level.prototype.updateColliderVisualizer = function() {
             }
         }
     }
-}
+};
+
+Level.prototype.reinitGuests = function() {
+    this.removeObjects(this.guests);
+    var chairs = [];
+    for (var i = 0; i < this.objects.length; ++i) {
+        if (this.objects[i] instanceof Chair) {
+            chairs.push(this.objects[i]);
+        }
+    }
+    var guestsCount = chairs.length - 2;
+    var chairsToPopulate = arrayUtil.randomSubset(chairs, guestsCount);
+    for (var i = 0; i < chairsToPopulate.length; ++i) {
+        var chair = chairsToPopulate[i];
+        var guest = new Guest({
+            level: this,
+            sceneParent: this.gardenParent,
+            x: chair.x + 0.5,
+            z: chair.z + 0.5,
+            sittingOn: chair
+        });
+        this.guests.push(guest);
+        this.objects.push(guest);
+    }
+};
 
 Level.prototype.canvasMove = function(viewportPos) {
     if (DEV_MODE) {
