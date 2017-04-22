@@ -25,17 +25,13 @@ var Game = function(resizer, renderer, loadingBar) {
 };
 
 Game.prototype.loadedInit = function() {
-    // Called after all the assets like 3D models and fonts have been loaded.
-
-    // Test geometry
-    var geometry = new THREE.BoxGeometry( 200, 200, 200 );
-    var material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true } );
-    this.mesh = new THREE.Mesh( geometry, material );
-    this.scene.add(this.mesh);
+    this.level = new Level({});
 };
 
 Game.prototype.render = function() {
-    this.renderer.render(this.scene, this.camera);
+    if (this.level) {
+        this.level.render(this.renderer);
+    }
     
     var that = this;
     if (this.takeScreenshot) {
@@ -52,10 +48,9 @@ Game.prototype.render = function() {
 Game.prototype.update = function(deltaTime) {
     this.time += deltaTime;
     this.input.update();
-    // Update your level here
-    if (this.mesh) {
-        this.mesh.rotation.x += 0.01;
-        this.mesh.rotation.y += 0.02;
+    
+    if (this.level) {
+        this.level.update(deltaTime);
     }
     
     GJS.Audio.muteAll(Game.parameters.get('muteAudio'));
