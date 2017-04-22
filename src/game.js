@@ -22,6 +22,7 @@ var Game = function(resizer, renderer, loadingBar) {
     if (DEV_MODE) {
         this.input.addListener(undefined, ['c'], this.editorKeyPressFunction('c'));
         this.input.addListener(undefined, ['t'], this.editorKeyPressFunction('t'));
+        this.input.addListener(undefined, ['space'], this.editorKeyPressFunction(' '));
         this.input.addListener(undefined, ['0'], this.devModeTakeScreenshot);
     }
     this.takeScreenshot = false;
