@@ -50,16 +50,13 @@ var Level = function(options) {
     this.tileEditorObjectParent = new THREE.Object3D();
     this.gardenParent.add(this.tileEditorObjectParent);
     this.tileEditorObjects = [];
-    
-    // Test level objects
-    this.addTileEditorObject(new DinnerTable({sceneParent: this.tileEditorObjectParent, z: 2, x: 2, width: 2, depth: 3}));
-    this.addTileEditorObject(new Chair({sceneParent: this.tileEditorObjectParent, z: 2, x: 4}));
 
     this.updateCollisionGridFromObjects();
 
     this.hoverTarget = null;
 
     this.devModeVisualizationParent = new THREE.Object3D();
+    this.colliderVisualizer = null;
     if (DEV_MODE) {
         this.gardenParent.add(this.devModeVisualizationParent);
         var axisHelper = new THREE.AxisHelper( 3.5 );
@@ -126,6 +123,18 @@ Level.prototype.clearTileEditorObjects = function() {
     }
 };
 
+Level.prototype.generateTileEditorObjectsFromTiles = function(tilemap) {
+    var tableRects = tilemap.groupTilesToRectangles(function(tile) { return tile == 't'; });
+    for (var i = 0; i < tableRects.length; ++i) {
+        this.addTileEditorObject(new DinnerTable({sceneParent: this.tileEditorObjectParent, x: tableRects[i].left, z: tableRects[i].top, width: tableRects[i].width(), depth: tableRects[i].height()}));
+    }
+    var chairPositions = tilemap.getTileCoords(function(tile) { return tile == 'c'; });
+    for (var i = 0; i < chairPositions.length; ++i) {
+        this.addTileEditorObject(new Chair({sceneParent: this.tileEditorObjectParent, x: chairPositions[i].x, z: chairPositions[i].y}));
+    }
+    this.updateCollisionGridFromObjects();
+};
+
 Level.prototype.updateCollisionGridFromObjects = function() {
     this.collisionTileMap = new GJS.TileMap({
         width: Level.gridWidth,
@@ -148,21 +157,24 @@ Level.prototype.updateCollisionGridFromObjects = function() {
     // Note that we're using platforming physics, just without the gravity to resolve character collisions.
     this.physicalCollisionTileMap = new GJS.PlatformingTileMap();
     this.physicalCollisionTileMap.init({tileMap: this.collisionTileMap});
+    this.updateColliderVisualizer();
 };
 
 Level.prototype.updateColliderVisualizer = function() {
-    while(this.colliderVisualizer.children.length > 0){ 
-        this.colliderVisualizer.remove(this.colliderVisualizer.children[0]);
-    }
-    var colliderBoxGeometry = new THREE.BoxGeometry(1, 1, 1);
-    for (var x = 0; x < this.collisionTileMap.width; ++x) {
-        for (var z = 0; z < this.collisionTileMap.height; ++z) {
-            if (this.collisionTileMap.tiles[z][x].isWall()) {
-                var tileColliderVisualizer = new THREE.Mesh(colliderBoxGeometry, Level.colliderDebugMaterial);
-                tileColliderVisualizer.position.y = 0.5;
-                tileColliderVisualizer.position.x = x + 0.5;
-                tileColliderVisualizer.position.z = z + 0.5;
-                this.colliderVisualizer.add(tileColliderVisualizer);
+    if (this.colliderVisualizer) {
+        while(this.colliderVisualizer.children.length > 0){ 
+            this.colliderVisualizer.remove(this.colliderVisualizer.children[0]);
+        }
+        var colliderBoxGeometry = new THREE.BoxGeometry(1, 1, 1);
+        for (var x = 0; x < this.collisionTileMap.width; ++x) {
+            for (var z = 0; z < this.collisionTileMap.height; ++z) {
+                if (this.collisionTileMap.tiles[z][x].isWall()) {
+                    var tileColliderVisualizer = new THREE.Mesh(colliderBoxGeometry, Level.colliderDebugMaterial);
+                    tileColliderVisualizer.position.y = 0.5;
+                    tileColliderVisualizer.position.x = x + 0.5;
+                    tileColliderVisualizer.position.z = z + 0.5;
+                    this.colliderVisualizer.add(tileColliderVisualizer);
+                }
             }
         }
     }

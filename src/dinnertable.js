@@ -29,15 +29,19 @@ var DinnerTable = function(options) {
     this.origin.position.x = this.x;
     this.origin.position.z = this.z;
     
-    //this.leg = TableLeg.model.clone();
-    //this.origin.add(this.leg);
+    var legOffsetX = this.width * 0.5 - 0.2;
+    var legOffsetZ = this.depth * 0.5 - 0.2;
+    this.addLeg(legOffsetX, legOffsetZ);
+    this.addLeg(legOffsetX, -legOffsetZ);
+    this.addLeg(-legOffsetX, legOffsetZ);
+    this.addLeg(-legOffsetX, -legOffsetZ);
     
-    var boxGeometry = new THREE.BoxGeometry(this.width, 1, this.depth);
+    var boxGeometry = new THREE.BoxGeometry(this.width - 0.1, 0.1, this.depth - 0.1);
     var material = Level.dinnerTableMaterial;
     var box = new THREE.Mesh(boxGeometry, material);
     box.position.x = this.width * 0.5;
     box.position.z = this.depth * 0.5;
-    box.position.y = 0.5;
+    box.position.y = 1.0;
     box.castShadow = true;
     box.receiveShadow = true;
     this.origin.add(box);
@@ -51,6 +55,18 @@ var DinnerTable = function(options) {
 };
 
 DinnerTable.prototype = new GridSceneObject();
+
+DinnerTable.prototype.addLeg = function(x, z) {
+    //var leg = TableLeg.model.clone();
+    var legGeometry = new THREE.BoxGeometry(0.1, 1.0, 0.1);
+    var material = Level.dinnerTableMaterial;
+    var leg = new THREE.Mesh(legGeometry, material);
+    leg.position.y = 0.5;
+    
+    leg.position.x = x + this.width * 0.5;
+    leg.position.z = z + this.depth * 0.5;
+    this.origin.add(leg);
+}
 
 DinnerTable.prototype.getColliderRect = function() {
     return new Rect(this.x, this.x + this.width, this.z, this.z + this.depth);

@@ -11,6 +11,12 @@ var LevelEditor = function(level, sceneParent) {
         color: 0xff0000,
         y: this.chosenY + 0.7
     });
+    
+    this.tilemap = new GJS.TileMap({
+        width: Level.gridWidth,
+        height: Level.gridDepth,
+        initTile: function() { return ''; }
+    });
 
     this.editorCursor.addToScene();
 };
@@ -21,6 +27,12 @@ LevelEditor.prototype.update = function(deltaTime) {
         this.editorCursor.gridZ = Math.floor(this.level.hoverTarget.object.position.z);
     }
     this.editorCursor.update(deltaTime);
+};
+
+LevelEditor.prototype.keyPress = function(key) {
+    this.tilemap.tiles[this.editorCursor.gridZ][this.editorCursor.gridX] = key;
+    this.level.clearTileEditorObjects();
+    this.level.generateTileEditorObjectsFromTiles(this.tilemap);
 };
 
 var EditorCursor = function(options) {

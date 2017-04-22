@@ -20,6 +20,8 @@ var Game = function(resizer, renderer, loadingBar) {
     this.input.addListener(GJS.Gamepad.BUTTONS.UP_OR_ANALOG_UP, ['left', 'a'], this.leftPress, this.leftRelease);
     
     if (DEV_MODE) {
+        this.input.addListener(undefined, ['c'], this.editorKeyPressFunction('c'));
+        this.input.addListener(undefined, ['t'], this.editorKeyPressFunction('t'));
         this.input.addListener(undefined, ['0'], this.devModeTakeScreenshot);
     }
     this.takeScreenshot = false;
@@ -61,6 +63,15 @@ Game.prototype.update = function(deltaTime) {
         this.loadedInit();
         this.initializedAfterLoad = true;
     }
+};
+
+Game.prototype.editorKeyPressFunction = function(key) {
+    var that = this;
+    return function() {
+        if (that.level) {
+            that.level.editor.keyPress(key);
+        }
+    };
 };
 
 Game.prototype.upPress = function() {

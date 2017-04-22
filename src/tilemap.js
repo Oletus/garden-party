@@ -148,10 +148,10 @@ GJS.TileMap.prototype.isTileInArea = function(tileMin, tileMax, matchFunc) {
  * @param {Vec2} tileMin Integer coordinates for top left corner of the area.
  * @param {Vec2} tileMax Integer coordinates for bottom right corner of the area.
  * @param {function} matchFunc Gets passed a tile and returns true if it matches.
- * @return {Array.<Object>} Matching tiles within the area limited by tileMin and tileMax
+ * @return {Array.<Vec2>} Coordinates of matching tiles within the area limited by tileMin and tileMax.
  * Coordinates are inclusive.
  */
-GJS.TileMap.prototype.getTilesInArea = function(tileMin, tileMax, matchFunc) {
+GJS.TileMap.prototype.getTileCoordsInArea = function(tileMin, tileMax, matchFunc) {
     var tiles = [];
     for (var y = tileMin.y; y <= tileMax.y; ++y) {
         if (y < 0) {
@@ -170,11 +170,43 @@ GJS.TileMap.prototype.getTilesInArea = function(tileMin, tileMax, matchFunc) {
                 break;
             }
             if (matchFunc(this.tiles[y][x])) {
-                tiles.push(this.tiles[y][x]);
+                tiles.push(new Vec2(x, y));
             }
         }
     }
     return tiles;
+};
+
+/**
+ * @param {Vec2} tileMin Integer coordinates for top left corner of the area.
+ * @param {Vec2} tileMax Integer coordinates for bottom right corner of the area.
+ * @param {function} matchFunc Gets passed a tile and returns true if it matches.
+ * @return {Array.<Object>} Matching tiles within the area limited by tileMin and tileMax.
+ * Coordinates are inclusive.
+ */
+GJS.TileMap.prototype.getTilesInArea = function(tileMin, tileMax, matchFunc) {
+    var tileCoords = this.getTileCoordsInArea(tileMin, tileMax, matchFunc);
+    var tiles = [];
+    for (var i = 0; i < tileCoords.length; ++i) {
+        tiles.push(this.tiles[tileCoords.y][tileCoords.x]);
+    }
+    return tiles;
+};
+
+/*
+ * @param {function} matchFunc Gets passed a tile and returns true if it matches.
+ * @return {Array.<Vec2>} Coordinates of matching tiles within the tilemap.
+ */
+GJS.TileMap.prototype.getTileCoords = function(matchFunc) {
+    return this.getTileCoordsInArea(new Vec2(0, 0), new Vec2(this.width, this.height), matchFunc);
+};
+
+/*
+ * @param {function} matchFunc Gets passed a tile and returns true if it matches.
+ * @return {Array.<Object>} Matching tiles within the tilemap.
+ */
+GJS.TileMap.prototype.getTiles = function(matchFunc) {
+    return this.getTilesInArea(new Vec2(0, 0), new Vec2(this.width, this.height), matchFunc);
 };
 
 /**
