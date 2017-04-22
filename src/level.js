@@ -74,12 +74,12 @@ var Level = function(options) {
 
     if (DEV_MODE) {
         var colliderVisualizer = new THREE.Object3D();
+        var colliderBoxGeometry = new THREE.BoxGeometry(1, 1, 1);
         this.colliderVisualizer = colliderVisualizer;  // Temporarily available to allow testing editor cursor raycasting
         for (var x = 0; x < this.collisionTileMap.width; ++x) {
             for (var z = 0; z < this.collisionTileMap.height; ++z) {
                 if (this.collisionTileMap.tiles[z][x].isWall()) {
-                    var boxGeometry = new THREE.BoxGeometry(1, 1, 1);
-                    var tileColliderVisualizer = new THREE.Mesh(boxGeometry, Level.colliderDebugMaterial);
+                    var tileColliderVisualizer = new THREE.Mesh(colliderBoxGeometry, Level.colliderDebugMaterial);
                     tileColliderVisualizer.position.y = 0.5;
                     tileColliderVisualizer.position.x = x + 0.5;
                     tileColliderVisualizer.position.z = z + 0.5;
