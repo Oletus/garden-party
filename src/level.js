@@ -50,8 +50,10 @@ var Level = function(options) {
     this.scenery.position.x = 7.5;
     this.scene.add(this.scenery);
 
+    this.playerCharacter = new PlayerCharacter({sceneParent: this.gardenParent});
+
     // Test level objects
-    var dinnerTable = new DinnerTable({sceneParent: this.gardenParent});
+    var dinnerTable = new DinnerTable({sceneParent: this.gardenParent, z: 2, x: 2, width: 2, depth: 3});
 };
 
 Level.State = {
