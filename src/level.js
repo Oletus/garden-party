@@ -63,6 +63,8 @@ var Level = function(options) {
         initTile: function() { return new GJS.PlatformingTile(); },
         initEdgeTile: function() {return new GJS.WallTile(); }
     });
+    this.physicalCollisionTileMap = new GJS.PlatformingTileMap();
+    this.physicalCollisionTileMap.init({tileMap: this.collisionTileMap});
     
     if (DEV_MODE) {
         var colliderVisualizer = new THREE.Object3D();
