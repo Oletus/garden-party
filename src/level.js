@@ -23,6 +23,7 @@ var Level = function(options) {
         var gridSize = 15;
         var divisions = 15;
         var gridHelper = new THREE.GridHelper( gridSize, divisions );
+        gridHelper.position.y = 0.1;
         gridHelper.position.x = gridSize / 2;
         gridHelper.position.z = gridSize / 2;
         this.gardenParent.add( gridHelper );
@@ -40,6 +41,14 @@ var Level = function(options) {
         relativeY: false,
         orbitAngle: Math.PI * 0.9
     });
+    
+    // TODO: Temporary ground, replace with scenery.
+    var groundGeometry = new THREE.PlaneGeometry(15, 15);
+    groundGeometry.rotateX(-Math.PI * 0.5);
+    this.scenery = new THREE.Mesh(groundGeometry, Level.groundMaterial);
+    this.scenery.position.z = 7.5;
+    this.scenery.position.x = 7.5;
+    this.scene.add(this.scenery);
 
     // Test level objects
     var dinnerTable = new DinnerTable({sceneParent: this.gardenParent});
@@ -52,7 +61,8 @@ Level.State = {
     FAIL: 3
 };
 
-Level.dinnerTableMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true } );
+Level.dinnerTableMaterial = new THREE.MeshBasicMaterial( { color: 0xeeeeee } );
+Level.groundMaterial = new THREE.MeshBasicMaterial( { color: 0x66cc00 } );
 
 Level.prototype.update = function(deltaTime) {
     this.state.update(deltaTime);
