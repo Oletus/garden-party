@@ -28,7 +28,7 @@ var Level = function(options) {
     this.cameraControl = new GJS.OrbitCameraControl({
         camera: this.camera,
         lookAt: this.getLookAtCenter(),
-        y: 15,
+        y: 21,
         relativeY: false,
         orbitAngle: Math.PI * 1.5
     });
