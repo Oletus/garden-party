@@ -54,6 +54,10 @@ Character.prototype.update = function(deltaTime) {
     
 };
 
+Character.prototype.setDisplayAngleFromXZ = function(x, z) {
+    this.center.rotation.y = Math.atan2(x, z) - Math.PI * 0.5;
+};
+
 
 var PlayerPhysicsShim = function(options) {
     this.init(options);
@@ -102,8 +106,7 @@ PlayerCharacter.prototype.update = function(deltaTime) {
         var movementMult = 1.0 / Math.sqrt(Math.pow(this.physicsShim.dx, 2) + Math.pow(this.physicsShim.dy, 2));
         this.physicsShim.dx *= movementMult;
         this.physicsShim.dy *= movementMult;
-        var displayAngle = Math.atan2(this.physicsShim.dx, this.physicsShim.dy) - Math.PI * 0.5;
-        this.center.rotation.y = displayAngle;
+        this.setDisplayAngleFromXZ(this.physicsShim.dx, this.physicsShim.dy);
     }
     this.physicsShim.dx *= Game.parameters.get('playerMoveSpeed');
     this.physicsShim.dy *= Game.parameters.get('playerMoveSpeed');
