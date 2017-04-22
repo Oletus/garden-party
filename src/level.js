@@ -55,15 +55,7 @@ var Level = function(options) {
     this.addTileEditorObject(new DinnerTable({sceneParent: this.tileEditorObjectParent, z: 2, x: 2, width: 2, depth: 3}));
     this.addTileEditorObject(new Chair({sceneParent: this.tileEditorObjectParent, z: 2, x: 4}));
 
-    // Note that we're using platforming physics, just without the gravity to resolve character collisions.
-    this.collisionTileMap = new GJS.TileMap({
-        width: Level.gridWidth,
-        height: Level.gridDepth,
-        initTile: function() { return new GJS.PlatformingTile(); },
-        initEdgeTile: function() {return new GJS.WallTile(); }
-    });
-    this.physicalCollisionTileMap = new GJS.PlatformingTileMap();
-    this.physicalCollisionTileMap.init({tileMap: this.collisionTileMap});
+    this.updateCollisionGridFromObjects();
 
     this.hoverTarget = null;
 
@@ -79,21 +71,10 @@ var Level = function(options) {
         gridHelper.position.x = gridSize / 2;
         gridHelper.position.z = gridSize / 2;
         this.devModeVisualizationParent.add(gridHelper);
-        
-        var colliderVisualizer = new THREE.Object3D();
-        var colliderBoxGeometry = new THREE.BoxGeometry(1, 1, 1);
-        for (var x = 0; x < this.collisionTileMap.width; ++x) {
-            for (var z = 0; z < this.collisionTileMap.height; ++z) {
-                if (this.collisionTileMap.tiles[z][x].isWall()) {
-                    var tileColliderVisualizer = new THREE.Mesh(colliderBoxGeometry, Level.colliderDebugMaterial);
-                    tileColliderVisualizer.position.y = 0.5;
-                    tileColliderVisualizer.position.x = x + 0.5;
-                    tileColliderVisualizer.position.z = z + 0.5;
-                    colliderVisualizer.add(tileColliderVisualizer);
-                }
-            }
-        }
-        this.devModeVisualizationParent.add(colliderVisualizer);
+
+        this.colliderVisualizer = new THREE.Object3D();
+        this.devModeVisualizationParent.add(this.colliderVisualizer);
+        this.updateColliderVisualizer();
 
         // Add a box to every grid tile for raycasting the editor cursor in debug mode
         this.gridVisualizer = new THREE.Object3D();
@@ -144,6 +125,48 @@ Level.prototype.clearTileEditorObjects = function() {
         this.tileEditorObjectParent.remove(this.tileEditorObjectParent.children[0]);
     }
 };
+
+Level.prototype.updateCollisionGridFromObjects = function() {
+    this.collisionTileMap = new GJS.TileMap({
+        width: Level.gridWidth,
+        height: Level.gridDepth,
+        initTile: function() { return new GJS.PlatformingTile(); },
+        initEdgeTile: function() {return new GJS.WallTile(); }
+    });
+    
+    for (var i = 0; i < this.tileEditorObjects.length; ++i) {
+        var colliderRect = this.tileEditorObjects[i].getColliderRect();
+        if (colliderRect) {
+            for (var x = colliderRect.left; x < colliderRect.right; ++x) {
+                for (var z = colliderRect.top; z < colliderRect.bottom; ++z) {
+                    this.collisionTileMap.tiles[z][x] = new GJS.WallTile();
+                }
+            }
+        }
+    }
+
+    // Note that we're using platforming physics, just without the gravity to resolve character collisions.
+    this.physicalCollisionTileMap = new GJS.PlatformingTileMap();
+    this.physicalCollisionTileMap.init({tileMap: this.collisionTileMap});
+};
+
+Level.prototype.updateColliderVisualizer = function() {
+    while(this.colliderVisualizer.children.length > 0){ 
+        this.colliderVisualizer.remove(this.colliderVisualizer.children[0]);
+    }
+    var colliderBoxGeometry = new THREE.BoxGeometry(1, 1, 1);
+    for (var x = 0; x < this.collisionTileMap.width; ++x) {
+        for (var z = 0; z < this.collisionTileMap.height; ++z) {
+            if (this.collisionTileMap.tiles[z][x].isWall()) {
+                var tileColliderVisualizer = new THREE.Mesh(colliderBoxGeometry, Level.colliderDebugMaterial);
+                tileColliderVisualizer.position.y = 0.5;
+                tileColliderVisualizer.position.x = x + 0.5;
+                tileColliderVisualizer.position.z = z + 0.5;
+                this.colliderVisualizer.add(tileColliderVisualizer);
+            }
+        }
+    }
+}
 
 Level.prototype.canvasMove = function(viewportPos) {
     if (DEV_MODE) {

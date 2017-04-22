@@ -3,6 +3,18 @@
 /**
  * @constructor
  */
+var GridSceneObject = function() {
+};
+
+GridSceneObject.prototype = new GJS.ThreeSceneObject();
+
+GridSceneObject.prototype.getColliderRect = function() {
+    return null;
+};
+
+/**
+ * @constructor
+ */
 var DinnerTable = function(options) {
     var defaults = {
         level: null,
@@ -38,7 +50,11 @@ var DinnerTable = function(options) {
     this.addToScene();
 };
 
-DinnerTable.prototype = new GJS.ThreeSceneObject();
+DinnerTable.prototype = new GridSceneObject();
+
+DinnerTable.prototype.getColliderRect = function() {
+    return new Rect(this.x, this.x + this.width, this.z, this.z + this.depth);
+};
 
 /**
  * @constructor
@@ -77,7 +93,11 @@ var Chair = function(options) {
     this.addToScene();
 };
 
-Chair.prototype = new GJS.ThreeSceneObject();
+Chair.prototype = new GridSceneObject();
+
+Chair.prototype.getColliderRect = function() {
+    return new Rect(this.x, this.x + 1, this.z, this.z + 1);
+};
 
 GJS.utilTHREE.loadJSONModel('chair', function(object) {
     Chair.model = object;
