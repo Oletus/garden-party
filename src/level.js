@@ -57,9 +57,14 @@ var Level = function(options) {
     this.playerCharacter = new PlayerCharacter({level: this, sceneParent: this.gardenParent, x: 1.5, z: 1.5});
     this.objects.push(this.playerCharacter);
 
+    // These contain all the objects that are generated from tile editor tiles, like tables and chairs.
+    this.tileEditorObjectParent = new THREE.Object3D();
+    this.gardenParent.add(this.tileEditorObjectParent);
+    this.tileEditorObjects = [];
+    
     // Test level objects
-    var dinnerTable = new DinnerTable({sceneParent: this.gardenParent, z: 2, x: 2, width: 2, depth: 3});
-    var chair = new Chair({sceneParent: this.gardenParent, z: 2, x: 4});
+    this.addTileEditorObject(new DinnerTable({sceneParent: this.tileEditorObjectParent, z: 2, x: 2, width: 2, depth: 3}));
+    this.addTileEditorObject(new Chair({sceneParent: this.tileEditorObjectParent, z: 2, x: 4}));
 
     // Note that we're using platforming physics, just without the gravity to resolve character collisions.
     this.collisionTileMap = new GJS.TileMap({
@@ -111,6 +116,29 @@ var Level = function(options) {
 
     if (DEV_MODE) {
         this.editor = new LevelEditor(this, this.gardenParent);
+    }
+};
+
+/**
+ * @param {GJS.ThreeSceneObject} tileEditorObject
+ */
+Level.prototype.addTileEditorObject = function(tileEditorObject) {
+    this.tileEditorObjects.push(tileEditorObject);
+    if (tileEditorObject.sceneParent !== this.tileEditorObjectParent) {
+        console.log("Error: Tile editor objects should have tileEditorObjectParent as their scene parent!", tileEditorObject);
+    }
+};
+
+Level.prototype.clearTileEditorObjects = function() {
+    for (var i = 0; i < this.tileEditorObjects.length; ++i) {
+        var objectIndex = this.objects.indexOf[this.tileEditorObjects[i]];
+        if (objectIndex >= 0) {
+            this.objects.splice(objectIndex, 1);
+        }
+    }
+    this.tileEditorObjects.splice(0, this.tileEditorObjects.length);
+    while(this.tileEditorObjectParent.children.length > 0){ 
+        this.tileEditorObjectParent.remove(this.tileEditorObjectParent.children[0]);
     }
 };
 
