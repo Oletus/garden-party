@@ -62,8 +62,9 @@ Goose.prototype = new GJS.ThreeSceneObject();
 Goose.State = {
     SITTING: 0,
     WALKING: 1,
-    CHASING: 2,
-    BITING: 3
+    WALKING_REALIGNING: 2,
+    CHASING: 3,
+    BITING: 4
 };
 
 Goose.prototype.randomIdleState = function() {
@@ -86,18 +87,36 @@ Goose.prototype.getDistancesToWalls = function() {
 };
 
 Goose.prototype.startWalking = function() {
+    if (!this.closeToTileCenter()) {
+        this.state.change(Goose.State.WALKING_REALIGNING);
+        this.walkTarget = new Vec2(Math.round(this.x - 0.5) + 0.5, Math.round(this.z - 0.5) + 0.5);
+        this.xMoveIntent = this.walkTarget.x - this.x;
+        this.zMoveIntent = this.walkTarget.y - this.z;
+        return;
+    }
     var wallDistances = this.getDistancesToWalls();
     var candidates = [];
+    var playerCharacterDiffVec = new Vec2(this.level.playerCharacter.x - this.x, this.level.playerCharacter.z - this.z);
+    playerCharacterDiffVec.normalize();
     for (var i = 0; i < 4; ++i) {
         if (wallDistances[i] >= 2) {
-            candidates.push(i);
+            if (this.canBite()) {
+                candidates.push(i);
+            } else {
+                // Check that we don't walk towards / through the player in case we're not able to bite.
+                var directionVec = GJS.CardinalDirection.toVec2(i);
+                if (playerCharacterDiffVec.dotProduct(directionVec) < 0.5) {
+                    candidates.push(i);
+                }
+            }
         }
     }
     if (candidates.length > 0) {
         this.state.change(Goose.State.WALKING);
-        this.nextStateChangeTime = mathUtil.random() * 2.0 + 0.8;
         var chosenDirection = arrayUtil.randomItem(candidates);
         var moveIntent = GJS.CardinalDirection.toVec2(chosenDirection);
+        var moveTiles = mathUtil.clamp(2, 5, Math.round(mathUtil.random() * wallDistances[chosenDirection] + 0.5));
+        this.walkTarget = new Vec2(this.x + moveIntent.x * moveTiles, this.z + moveIntent.y * moveTiles);
         this.xMoveIntent = moveIntent.x;
         this.zMoveIntent = moveIntent.y;
     }
@@ -122,6 +141,10 @@ Goose.prototype.startChasing = function(chaseTarget) {
     }
 };
 
+Goose.prototype.canBite = function() {
+    return this.state.lifeTime - this.lastBiteTime > Game.parameters.get('gooseBiteStunTime');
+};
+
 Goose.prototype.bite = function(biteTarget) {
     biteTarget.getBitten();
     this.state.change(Goose.State.BITING);
@@ -131,7 +154,7 @@ Goose.prototype.bite = function(biteTarget) {
 Goose.prototype.update = function(deltaTime) {
     this.state.update(deltaTime);
     var moveSpeed = 0.0;
-    if (this.state.id !== Goose.State.CHASING && this.state.lifeTime - this.lastBiteTime > Game.parameters.get('gooseBiteStunTime')) {
+    if (this.state.id !== Goose.State.CHASING && this.canBite()) {
         // See if the goose needs to start chasing the player.
         // It will chase if the player is on its line of sight, or if the player gets very close.
         var distanceToPlayer = this.level.playerCharacter.center.position.distanceTo(this.center.position);
@@ -163,10 +186,14 @@ Goose.prototype.update = function(deltaTime) {
             this.randomIdleState();
         }
         this.mesh.position.y = this.sitYOffset;
-    } else if (this.state.id === Goose.State.WALKING) {
+    } else if (this.state.id === Goose.State.WALKING || this.state.id === Goose.State.WALKING_REALIGNING) {
         moveSpeed = Game.parameters.get('gooseWalkSpeed');
-        if (this.state.time > this.nextStateChangeTime && this.closeToTileCenter()) {
-            this.randomIdleState();
+        if (this.closeToTarget()) {
+            if (this.state.id === Goose.State.WALKING) {
+                this.randomIdleState();
+            } else {
+                this.startWalking();
+            }
         }
         this.mesh.position.y = this.walkYOffset + (Math.sin(this.state.lifeTime * 12.0) > 0.0 ? 0.1 : 0.0);
     } else if (this.state.id === Goose.State.CHASING) {
@@ -201,6 +228,10 @@ Goose.prototype.update = function(deltaTime) {
 
 Goose.prototype.closeToTileCenter = function() {
     return Math.abs(this.x - 0.5 - Math.round(this.x - 0.5)) < 0.1 && Math.abs(this.z - 0.5 - Math.round(this.z - 0.5)) < 0.1;
+};
+
+Goose.prototype.closeToTarget = function() {
+    return this.walkTarget.distance(new Vec2(this.x, this.z)) < 0.1;
 };
 
 Goose.modelRotationOffset = -Math.PI * 0.5;
