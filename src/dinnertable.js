@@ -53,7 +53,7 @@ var DinnerTable = function(options) {
     this.chairs = [];
     
     this.discussionTopic = null;
-    this.lastTopicSitters = []; // Used to manage that simply reintroducing the same people to the same table doesn't change the topic
+    this.unfinishedTopicSitters = []; // Used to manage that simply reintroducing the same people to the same table doesn't change the topic
     
     this.initThreeSceneObject({
         object: this.origin,
@@ -132,6 +132,10 @@ DinnerTable.prototype.update = function(deltaTime) {
         } else {
             this.textMesh.material.opacity = this.state.time;
         }
+        if (this.state.time > Game.parameters.get('maxTimePerDiscussionTopic')) {
+            this.endTopic();
+            this.unfinishedTopicSitters = [];
+        }
     } else if (this.state.id === DinnerTable.State.REMOVING_TOPIC) {
         this.textMesh.material.opacity = mathUtil.clamp(0.0, this.textMesh.material.opacity, 1.0 - this.state.time);
         if (this.state.time > 1.0) {
@@ -151,21 +155,38 @@ DinnerTable.prototype.getSitters = function() {
     return sitters;
 };
 
-DinnerTable.prototype.updateLastTopicSitters = function() {
-    this.lastTopicSitters = this.getSitters().slice();
+DinnerTable.prototype.updateUnfinishedTopicSitters = function() {
+    this.unfinishedTopicSitters = this.getSitters().slice();
+};
+
+DinnerTable.prototype.endTopic = function() {
+    this.state.change(DinnerTable.State.REMOVING_TOPIC);
+    this.textMesh.material.transparent = true;
+    var sitters = this.getSitters();
+    for (var i = 0; i < sitters.length; ++i) {
+        sitters[i].topicEnded();
+    }
 };
 
 DinnerTable.prototype.trySetTopic = function() {
     var sitters = this.getSitters();
     if (sitters.length > 1) {
-        var everyoneWasHereAlready = true;
+        var continueOldConversation = true;
         for (var i = 0; i < sitters.length; ++i) {
-            if (this.lastTopicSitters.indexOf(sitters[i]) < 0) {
-                everyoneWasHereAlready = false;
+            if (this.unfinishedTopicSitters.indexOf(sitters[i]) < 0) {
+                continueOldConversation = false;
             }
         }
-        if (!everyoneWasHereAlready) {
-            this.discussionTopic = arrayUtil.randomItem(conversationData);
+        if (!continueOldConversation) {
+            if (this.discussionTopic === null) {
+                this.discussionTopic = arrayUtil.randomItem(conversationData);
+            } else {
+                var newDiscussionTopic = this.discussionTopic;
+                while (newDiscussionTopic === this.discussionTopic) {
+                    newDiscussionTopic = arrayUtil.randomItem(conversationData);
+                }
+                this.discussionTopic = newDiscussionTopic;
+            }
         }
         this.setText(this.discussionTopic.name);
         this.textMesh.material.opacity = 0.0;
@@ -175,22 +196,21 @@ DinnerTable.prototype.trySetTopic = function() {
         for (var i = 0; i < sitters.length; ++i) {
             sitters[i].joinTopic(this.discussionTopic);
         }
-        this.updateLastTopicSitters();
+        this.updateUnfinishedTopicSitters();
     }
 };
 
 DinnerTable.prototype.addedSitter = function(sitter) {
     if (this.state.id === DinnerTable.State.TOPIC) {
         sitter.joinTopic(this.discussionTopic);
-        this.updateLastTopicSitters();
+        this.updateUnfinishedTopicSitters();
     }
 };
 
 DinnerTable.prototype.removedSitter = function(sitter) {
     var sitters = this.getSitters();
     if (sitters.length <= 1) {
-        this.textMesh.material.transparent = true;
-        this.state.change(DinnerTable.State.REMOVING_TOPIC);
+        this.endTopic();
         if (sitters.length === 1) {
             sitters[0].leftAlone();
         }

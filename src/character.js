@@ -196,6 +196,10 @@ Character.prototype.joinTopic = function(topic) {
     this.topic = topic;
 };
 
+Character.prototype.topicEnded = function() {
+    this.emotionalState.changeIfDifferent(Character.EmotionalState.NEUTRAL);
+};
+
 Character.prototype.leftAlone = function() {
     this.emotionalState.changeIfDifferent(Character.EmotionalState.LONELY);
 };
