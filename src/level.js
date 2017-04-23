@@ -111,6 +111,20 @@ var Level = function(options) {
     }
 
     this.effectComposer = null;
+    
+    this.guiParent = new THREE.Object3D();
+    this.guiParent.position.x = Level.gridWidth;
+    this.guiParent.position.z = -0.2;
+    this.guiParent.rotation.y = Math.PI;
+    this.gardenParent.add(this.guiParent);
+    
+    this.score = 0;
+    this.scoreText = new GJS.ThreeExtrudedTextObject({
+        sceneParent: this.guiParent,
+        string: 'SCORE: ' + this.score,
+        textAlign: 'left'
+        });
+    this.scoreText.addToScene();
 };
 
 Level.prototype.updateCamera = function(cameraAspect) {
@@ -170,6 +184,7 @@ Level.prototype.generateTileEditorObjectsFromTiles = function(tilemap) {
     var tableRects = tilemap.groupTilesToRectangles(isTable);
     for (var i = 0; i < tableRects.length; ++i) {
         this.addTileEditorObject(new DinnerTable({
+            level: this,
             sceneParent: this.tileEditorObjectParent,
             x: tableRects[i].left,
             z: tableRects[i].top,
@@ -202,6 +217,7 @@ Level.prototype.generateTileEditorObjectsFromTiles = function(tilemap) {
             tableDirection = new Vec2(1, 0);
         }
         this.addTileEditorObject(new Chair({
+            level: this,
             sceneParent: this.tileEditorObjectParent,
             x: chairX,
             z: chairZ,
@@ -340,6 +356,11 @@ Level.prototype.update = function(deltaTime) {
         this.editor.update(deltaTime);
         this.tiledata = this.editor.getTileData();
     }
+};
+
+Level.prototype.addScore = function(scoreDelta) {
+    this.score += scoreDelta;
+    this.scoreText.setString('SCORE: ' + this.score);
 };
 
 Level.prototype.initPostprocessing = function(renderer) {

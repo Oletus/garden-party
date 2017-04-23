@@ -183,6 +183,7 @@ DinnerTable.prototype.update = function(deltaTime) {
                 text.addToScene();
                 text.object.position.y = 0.0;
                 text.object.rotation.y = Math.PI;
+                this.level.addScore(this.conversationScore);
             } else {
                 this.state.change(DinnerTable.State.NO_TOPIC);
             }

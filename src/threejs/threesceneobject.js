@@ -92,7 +92,8 @@ GJS.ThreeTextObject.prototype.initThreeTextObject = function(options) {
     var defaults = {
         string: "",
         maxRowLength: -1,
-        rowSpacing: 1.3
+        rowSpacing: 1.3,
+        textAlign: 'center'
     };
     objectUtil.initWithDefaults(this, defaults, options);
     
@@ -141,6 +142,11 @@ GJS.ThreeExtrudedTextObject.prototype.setString = function(string) {
         }
         for (var i = 0; i < this.stringSplitToRows.length; ++i) {
             var rowMesh = this._createTextMesh(this.stringSplitToRows[i]);
+            if (this.textAlign === 'left') {
+                rowMesh.position.x = -rowMesh.geometry.boundingBox.min.x;
+            } else if (this.textAlign === 'right') {
+                rowMesh.position.x = -rowMesh.geometry.boundingBox.max.x;
+            }
             rowMesh.position.y = (this.stringSplitToRows.length - i - 0.5) * this.rowSpacing;
             this.object.add(rowMesh);
         }
@@ -156,6 +162,7 @@ GJS.ThreeExtrudedTextObject.prototype._createTextMesh = function(string) {
         bevelEnabled: this.bevelEnabled,
     });
     textGeo.center();
+    textGeo.computeBoundingBox();
     var textMesh = new THREE.Mesh( textGeo, this.material );
     return textMesh;
 };
