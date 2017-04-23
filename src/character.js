@@ -62,7 +62,7 @@ Character.prototype.initCharacter = function(options) {
     
     this.lastTopic = null;
     this.topic = null;
-    this.likes = {}; // Emotional state ids based on topic name
+    this.reactions = {}; // Emotional state ids based on topic name
     
     this.emotionalState = new GJS.StateMachine({id: Character.EmotionalState.NEUTRAL});
     this.tearTimer = 0.0;
@@ -178,14 +178,14 @@ Character.prototype.dropObjectOnChair = function(chair) {
 
 Character.prototype.joinTopic = function(topic) {
     if (topic === this.topic) {
-        this.emotionalState.changeIfDifferent(this.likes[topic.name]);
+        this.emotionalState.changeIfDifferent(this.reactions[topic.name]);
     } else {
-        if (mathUtil.random() < 0.6) {
+        if (mathUtil.random() > topic.controversy) {
             this.emotionalState.changeIfDifferent(Character.EmotionalState.HAPPY);
         } else {
             this.emotionalState.changeIfDifferent(Character.EmotionalState.SAD);
         }
-        this.likes[topic.name] = this.emotionalState.id;
+        this.reactions[topic.name] = this.emotionalState.id;
     }
     this.topic = topic;
 };
