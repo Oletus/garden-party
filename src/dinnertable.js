@@ -55,6 +55,15 @@ var DinnerTable = function(options) {
     this.discussionTopic = null;
     this.unfinishedTopicSitters = []; // Used to manage that simply reintroducing the same people to the same table doesn't change the topic
     
+    this.textMaterial = DinnerTable.textMaterial.clone();
+    this.textParent = new THREE.Object3D();
+    this.textParent.position.y = 1.5;
+    this.textParent.visible = false;
+    this.discussingTextMesh = this.createTextMesh('TALK:');
+    this.discussingTextMesh.position.y = 0.6;
+    this.textParent.add(this.discussingTextMesh);
+    this.center.add(this.textParent);
+    
     this.initThreeSceneObject({
         object: this.origin,
         sceneParent: options.sceneParent
@@ -100,24 +109,25 @@ DinnerTable.prototype.createTextMesh = function(text) {
         bevelEnabled: false,
     });
     textGeo.center();
-    var textMesh = new THREE.Mesh( textGeo, DinnerTable.textMaterial.clone() );
-    textMesh.position.z = 0.1;
+    var textMesh = new THREE.Mesh( textGeo, this.textMaterial );
+    //textMesh.position.z = -0.025;
     return textMesh;
 };
 
 DinnerTable.prototype.setText = function(text) {
     if (this.textMesh) {
-        this.center.remove(this.textMesh);
+        this.textParent.remove(this.textMesh);
     }
     this.textMesh = this.createTextMesh(text);
-    this.textMesh.position.y = 1.5;
-    this.textMesh.rotation.y = Math.PI;
-    this.center.add(this.textMesh);
+    this.textParent.visible = true;
+    this.textParent.rotation.y = Math.PI;
+    this.textParent.add(this.textMesh);
 };
 
 DinnerTable.prototype.update = function(deltaTime) {
-    if (this.textMesh) {
-        this.textMesh.rotation.y += deltaTime;
+    this.textParent.rotation.y += deltaTime * 0.5;
+    if (this.textParent.rotation.y > -Math.PI * 0.5) {
+        this.textParent.rotation.y -= Math.PI;
     }
     
     this.state.update(deltaTime);
@@ -127,19 +137,19 @@ DinnerTable.prototype.update = function(deltaTime) {
         }
     } else if (this.state.id === DinnerTable.State.TOPIC) {
         if (this.state.time > 1.0) {
-            this.textMesh.material.opacity = 1.0;
-            this.textMesh.material.transparent = false;
+            this.textMaterial.opacity = 1.0;
+            this.textMaterial.transparent = false;
         } else {
-            this.textMesh.material.opacity = this.state.time;
+            this.textMaterial.opacity = this.state.time;
         }
         if (this.state.time > Game.parameters.get('maxTimePerDiscussionTopic')) {
             this.endTopic();
             this.unfinishedTopicSitters = [];
         }
     } else if (this.state.id === DinnerTable.State.REMOVING_TOPIC) {
-        this.textMesh.material.opacity = mathUtil.clamp(0.0, this.textMesh.material.opacity, 1.0 - this.state.time);
+        this.textMaterial.opacity = mathUtil.clamp(0.0, this.textMaterial.opacity, 1.0 - this.state.time);
         if (this.state.time > 1.0) {
-            this.textMesh.visible = false;
+            this.textParent.visible = false;
             this.state.change(DinnerTable.State.NO_TOPIC);
         }
     }
@@ -161,7 +171,7 @@ DinnerTable.prototype.updateUnfinishedTopicSitters = function() {
 
 DinnerTable.prototype.endTopic = function() {
     this.state.change(DinnerTable.State.REMOVING_TOPIC);
-    this.textMesh.material.transparent = true;
+    this.textMaterial.transparent = true;
     var sitters = this.getSitters();
     for (var i = 0; i < sitters.length; ++i) {
         sitters[i].topicEnded();
@@ -189,8 +199,8 @@ DinnerTable.prototype.trySetTopic = function() {
             }
         }
         this.setText(this.discussionTopic.name);
-        this.textMesh.material.opacity = 0.0;
-        this.textMesh.material.transparent = true;
+        this.textMaterial.opacity = 0.0;
+        this.textMaterial.transparent = true;
         this.state.change(DinnerTable.State.TOPIC);
 
         for (var i = 0; i < sitters.length; ++i) {
