@@ -21,7 +21,7 @@ var Level = function(options) {
     
     this.setupLights();
 
-    this.camera = new THREE.PerspectiveCamera( 40, this.cameraAspect, 1, 500000 );
+    this.camera = new THREE.PerspectiveCamera( 20, this.cameraAspect, 1, 500000 );
     this.raycaster = new THREE.Raycaster();
     
     this.objects = [];
@@ -29,7 +29,8 @@ var Level = function(options) {
     this.cameraControl = new GJS.OrbitCameraControl({
         camera: this.camera,
         lookAt: this.getLookAtCenter(),
-        y: 21,
+        y: 30,
+        orbitDistance: 30,
         relativeY: false,
         orbitAngle: Math.PI * 1.5
     });
@@ -298,7 +299,6 @@ Level.prototype.update = function(deltaTime) {
 
     this.cameraControl.update(deltaTime);
     this.cameraControl.setLookAt(this.getLookAtCenter());
-    this.cameraControl.set
 
     for (var i = 0; i < this.objects.length; ++i) {
         this.objects[i].update(deltaTime);
@@ -363,7 +363,7 @@ Level.prototype.render = function(renderer) {
 };
 
 Level.prototype.getLookAtCenter = function() {
-    return new THREE.Vector3(Level.gridWidth * 0.5, 0.0, Level.gridDepth * 0.5);
+    return new THREE.Vector3(Level.gridWidth * 0.5, 0.0, Level.gridDepth * 0.42);
 };
 
 Level.prototype.setupLights = function() {
