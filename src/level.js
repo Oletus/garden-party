@@ -21,10 +21,10 @@ var Level = function(options) {
     
     this.setupLights();
 
-    //this.camera = new THREE.PerspectiveCamera( 20, this.cameraAspect, 1, 500000 );
+    //this.camera = new THREE.PerspectiveCamera( 20, this.cameraAspect, 30, 80 );
     var camWidth = 17;
     var camHeight = 17 / this.cameraAspect;
-    this.camera = new THREE.OrthographicCamera( camWidth / - 2, camWidth / 2, camHeight / 2, camHeight / - 2, 1, 1000 );
+    this.camera = new THREE.OrthographicCamera( camWidth / - 2, camWidth / 2, camHeight / 2, camHeight / - 2, 30, 80 );
     this.raycaster = new THREE.Raycaster();
     
     this.objects = [];
@@ -38,10 +38,8 @@ var Level = function(options) {
         orbitAngle: Math.PI * 1.5
     });
     
-    // TODO: Temporary ground, replace with scenery.
-    var groundGeometry = new THREE.PlaneGeometry(Level.gridWidth, Level.gridDepth);
-    groundGeometry.rotateX(-Math.PI * 0.5);
-    this.scenery = new THREE.Mesh(groundGeometry, Level.groundMaterial);
+    this.scenery = Level.sceneryModel.clone();
+    this.scenery.rotation.y = Math.PI;
     this.scenery.position.x = Level.gridWidth * 0.5;
     this.scenery.position.z = Level.gridDepth * 0.5;
     this.scenery.castShadow = true;
@@ -302,7 +300,7 @@ Level.State = {
     FAIL: 3
 };
 
-Level.dinnerTableMaterial = new THREE.MeshPhongMaterial( { color: 0xeeeeee } );
+Level.dinnerTableMaterial = new THREE.MeshPhongMaterial( { color: 0x777777 } );
 Level.chairMaterial = new THREE.MeshPhongMaterial( { color: 0xaa7733 } );
 Level.groundMaterial = new THREE.MeshPhongMaterial( { color: 0x66cc00 } );
 Level.colliderDebugMaterial = new THREE.MeshBasicMaterial( { color: 0xff0088, wireframe: true } );
@@ -389,32 +387,28 @@ Level.prototype.getLookAtCenter = function() {
 };
 
 Level.prototype.setupLights = function() {
-    this.scene.add(new THREE.AmbientLight(0x555555));
-    var mainLight = new THREE.DirectionalLight(0xaaa588, 0.7);
-    mainLight.position.set(0.5, 1, -1).normalize();
+    this.scene.add(new THREE.AmbientLight(0xC2E4FF, 1.5));
+    var mainLight = new THREE.DirectionalLight(0xffbff7, 1.0);
+    mainLight.position.set(0.5, 1, 0.6).normalize();
     this.scene.add(mainLight);
 
-    var spotLight = new THREE.SpotLight(0x665555, 1, 0, Math.PI * 0.15);
+    var spotLight = new THREE.SpotLight(0xffbff7, 1, 0, Math.PI * 0.15);
     this.spotLight = spotLight;
-    spotLight.position.set( 125, 250, -250 );
+    spotLight.position.set( 0.5 * 250, 250, 0.6 * 250 );
     spotLight.target = new THREE.Object3D();
     this.scene.add(spotLight.target);
     this.updateSpotLightTarget();
 
     spotLight.castShadow = true;
-    var shadowFovDegrees = 3;
-    spotLight.shadow = new THREE.LightShadow( new THREE.PerspectiveCamera( shadowFovDegrees, 1, 100, 400 ) );
-    spotLight.shadow.bias = -0.0001;
+    var shadowFovDegrees = 4;
+    spotLight.shadow = new THREE.LightShadow( new THREE.PerspectiveCamera( shadowFovDegrees, 1, 240, 380 ) );
+    spotLight.shadow.bias = 0.0001;
     spotLight.shadow.mapSize.width = 1024;
     spotLight.shadow.mapSize.height = 1024;
     this.scene.add( spotLight );
 
     /*var helper = new THREE.CameraHelper( spotLight.shadow.camera );
     this.scene.add(helper);*/
-
-    var fillLight = new THREE.DirectionalLight(0x333355, 1);
-    fillLight.position.set(-1, 1, 1).normalize();
-    this.scene.add(fillLight);
 };
 
 Level.prototype.updateSpotLightTarget = function() {
@@ -423,7 +417,11 @@ Level.prototype.updateSpotLightTarget = function() {
 };
 
 Level.font = null;
+Level.sceneryModel = null;
 
 GJS.utilTHREE.loadFont('aldo_the_apache_regular', function(font) {
     Level.font = font;
+});
+GJS.utilTHREE.loadJSONModel('base_layer', function(object) {
+    Level.sceneryModel = object;
 });

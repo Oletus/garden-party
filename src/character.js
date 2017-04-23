@@ -254,7 +254,7 @@ PlayerCharacter.prototype.tryPickUpOrDrop = function() {
 
 var InteractionCursor = function(options) {
     var defaults = {
-        color: 0xaaccff
+        color: 0xbb3366
     };
     objectUtil.initWithDefaults(this, defaults, options);
 
@@ -272,7 +272,7 @@ var InteractionCursor = function(options) {
 InteractionCursor.prototype = new GJS.ThreeSceneObject();
 
 InteractionCursor.material = function(color, emissiveColor) {
-    if (emissiveColor === undefined) emissiveColor = 0x448888;
+    if (emissiveColor === undefined) emissiveColor = 0x772222;
     var material = new THREE.MeshPhongMaterial( { color: color, emissive: emissiveColor } );
     material.transparent = true;
     material.opacity = 0.7;
