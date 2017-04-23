@@ -370,6 +370,13 @@ Level.prototype.addScore = function(scoreDelta) {
         this.negativeScore -= scoreDelta;
     }
     this.scoreText.setString('SCORE: ' + this.score + '/' + this.passScore + ' FAILURES: ' + this.negativeScore + '/' + this.failScore);
+    if (this.state.id === Level.State.IN_PROGRESS) {
+        if (this.negativeScore >= this.failScore) {
+            this.state.change(Level.State.FAIL);
+        } else if (this.score >= this.passScore) {
+            this.state.change(Level.State.SUCCESS);
+        }
+    }
 };
 
 Level.prototype.initPostprocessing = function(renderer) {

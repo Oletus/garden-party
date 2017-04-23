@@ -12,6 +12,7 @@ var Game = function(resizer, renderer, loadingBar) {
     mathUtil.seedrandom();
     
     this.initializedAfterLoad = false;
+    this.levelIndex = 0;
 
     var numPlayers = 1;
     this.input = new GJS.InputMapper(this, numPlayers);
@@ -32,8 +33,12 @@ var Game = function(resizer, renderer, loadingBar) {
     this.takeScreenshot = false;
 };
 
-Game.prototype.loadedInit = function() {
-    this.level = new Level({game: this, cameraAspect: this.resizer.width / this.resizer.height});
+Game.prototype.loadLevel = function() {
+    this.level = new Level({
+        game: this,
+        cameraAspect: this.resizer.width / this.resizer.height,
+        levelSpec: levelData.data[levelData.levelSequence[this.levelIndex]]
+    });
 };
 
 Game.prototype.render = function() {
@@ -59,15 +64,31 @@ Game.prototype.update = function(deltaTime) {
     
     if (this.level) {
         this.level.update(deltaTime);
+        if (this.level.state.id === Level.State.SUCCESS && this.level.state.time > 1.0) {
+            this.nextLevel();
+        } else if (this.level.state.id === Level.State.FAIL && this.level.state.time > 1.0) {
+            this.restartLevel();
+        }
     }
     
     GJS.Audio.muteAll(Game.parameters.get('muteAudio'));
 
     // Call initialization function after all model assets have been loaded.
     if (this.loadingBar.finished() && !this.initializedAfterLoad) {
-        this.loadedInit();
+        this.loadLevel();
         this.initializedAfterLoad = true;
     }
+};
+
+Game.prototype.nextLevel = function() {
+    if (this.levelIndex < levelData.levelSequence.length - 1) {
+        ++this.levelIndex;
+        this.loadLevel();
+    }
+};
+
+Game.prototype.restartLevel = function() {
+    this.loadLevel();
 };
 
 Game.prototype.editorKeyPressFunction = function(key) {
