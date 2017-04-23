@@ -44,7 +44,7 @@ var conversationData =
     "lines": [
       "I'm thinking of going into politics myself.",
       "The two state solution is really the...",
-      "I would not vote for those crooks even!"
+      "I would never vote for those crooks!"
     ]
   },
   {
@@ -87,7 +87,9 @@ var conversationData =
     "name": "Pop culture",
     "controversy": 0.3,
     "lines": [
-      "Who's that guy in that thing?"
+      "Who's that guy in that thing?",
+      "No spoilers!",
+      "You haven't seen it? It's a classic!"
     ]
   },
   {
@@ -103,7 +105,18 @@ var conversationData =
     "name": "Sports",
     "controversy": 0.4,
     "lines": [
-      "Did you catch the game last night?"
+      "Did you catch the game last night?",
+      "It was two to one with an inning and an out.",
+      "What a season for our guys, amrite?"
+    ]
+  },
+  {
+    "name": "Science",
+    "controversy": 0.4,
+    "lines": [
+      "Well, I don't believe it!",
+      "I read it in the New Scientist.",
+      "It was debunked years ago."
     ]
   }
 ];
