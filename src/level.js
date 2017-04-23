@@ -49,6 +49,9 @@ var Level = function(options) {
     this.playerCharacter = new PlayerCharacter({level: this, sceneParent: this.gardenParent, x: 1.5, z: 1.5});
     this.objects.push(this.playerCharacter);
     
+    this.goose = new Goose({level: this, sceneParent: this.gardenParent, x: 3.5, z: 9.5});
+    this.objects.push(this.goose);
+    
     this.guests = [];
 
     // These contain all the objects that are generated from tile editor tiles, like tables and chairs.

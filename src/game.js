@@ -187,6 +187,8 @@ Game.prototype.devModeTakeScreenshot = function() {
 Game.parameters = new GJS.GameParameters({
     'muteAudio': {initial: false},
     'playerMoveSpeed': {initial: 5.0},
+    'gooseWalkSpeed': {initial: 2.0},
+    'gooseChaseSpeed': {initial: 6.0},
     'postProcessingEnabled': {initial: true},
     'shadowsEnabled': {initial: true},
     'debugVisualizations': {initial: false},

@@ -1,7 +1,13 @@
 'use strict';
 
 var CharacterPhysicsShim = function(options) {
-    this.level = options.level;
+    var defaults = {
+        level: null,
+        width: 0.5,
+        height: 0.5,
+    };
+    objectUtil.initWithDefaults(this, defaults, options);
+
     this.init(options);
 };
 
@@ -15,10 +21,8 @@ CharacterPhysicsShim.prototype = new GJS.PlatformingObject();
  * @return {Rect} Collision rectangle.
  */
 CharacterPhysicsShim.prototype.getPositionedCollisionRect = function(x, y) {
-    var width = 0.5;
-    var height = 0.5;
-    return new Rect(x - width * 0.5, x + width * 0.5,
-                    y - height * 0.5, y + height * 0.5);
+    return new Rect(x - this.width * 0.5, x + this.width * 0.5,
+                    y - this.height * 0.5, y + this.height * 0.5);
 };
 
 CharacterPhysicsShim.prototype.move = function(deltaTime, xMoveIntent, zMoveIntent, moveSpeed) {

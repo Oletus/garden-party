@@ -131,16 +131,14 @@ Character.prototype.sitOn = function(chair) {
     chair.setSitter(this);
 };
 
-Character.modelRotationOffset = 0;
-
 Character.prototype.setDisplayAngleFromXZ = function(x, z) {
     this.center.rotation.y = Math.atan2(x, z);
 };
 
 Character.prototype.interactionDistance = function(other) {
     var interactionPointDistance = 0.5;
-    var thisVec = new Vec2(this.x + Math.sin(this.center.rotation.y - Character.modelRotationOffset) * interactionPointDistance, 
-                           this.z + Math.cos(this.center.rotation.y - Character.modelRotationOffset) * interactionPointDistance);
+    var thisVec = new Vec2(this.x + Math.sin(this.center.rotation.y) * interactionPointDistance, 
+                           this.z + Math.cos(this.center.rotation.y) * interactionPointDistance);
     var otherVec = new Vec2(other.x, other.z);
     return thisVec.distance(otherVec);
 };
@@ -373,6 +371,7 @@ Character.tearMaterial = new THREE.MeshPhongMaterial({ color: 0x666688, emissive
 /*Character.tearMaterial.transparent = true;
 Character.tearMaterial.opacity = 0.5;*/
 
+Character.modelRotationOffset = 0;
 Character.hostessModel = null;
 
 GJS.utilTHREE.loadJSONModel('hostess', function(object) {
