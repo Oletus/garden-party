@@ -141,6 +141,10 @@ Character.prototype.dropObjectOnChair = function(chair) {
     this.carrying = null;
 };
 
+Character.prototype.newTopic = function() {
+    
+};
+
 
 var Guest = function(options) {
     this.initCharacter(options);

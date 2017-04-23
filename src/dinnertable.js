@@ -66,9 +66,8 @@ DinnerTable.prototype = new GridSceneObject();
 
 DinnerTable.State = {
     NO_TOPIC: 0,
-    NEW_TOPIC: 1,
-    TOPIC: 2,
-    REMOVING_TOPIC: 3
+    TOPIC: 1,
+    REMOVING_TOPIC: 2
 };
 
 DinnerTable.prototype.addLeg = function(x, z) {
@@ -123,15 +122,19 @@ DinnerTable.prototype.update = function(deltaTime) {
         if (this.state.time > 1.0) {
             this.trySetTopic();
         }
-    } else if (this.state.id === DinnerTable.State.NEW_TOPIC) {
-        this.textMesh.material.opacity = this.state.time;
+    } else if (this.state.id === DinnerTable.State.TOPIC) {
         if (this.state.time > 1.0) {
             this.textMesh.material.opacity = 1.0;
             this.textMesh.material.transparent = false;
-            this.state.change(DinnerTable.State.TOPIC);
+        } else {
+            this.textMesh.material.opacity = this.state.time;
+        }
+        if (this.getSitters().length <= 1) {
+            this.textMesh.material.transparent = true;
+            this.state.change(DinnerTable.State.REMOVING_TOPIC);
         }
     } else if (this.state.id === DinnerTable.State.REMOVING_TOPIC) {
-        this.textMesh.material.opacity = mathUtil.clamp(0.0, 1.0, 1.0 - this.state.time);
+        this.textMesh.material.opacity = mathUtil.clamp(0.0, this.textMesh.material.opacity, 1.0 - this.state.time);
         if (this.state.time > 1.0) {
             this.textMesh.visible = false;
             this.state.change(DinnerTable.State.NO_TOPIC);
@@ -139,19 +142,28 @@ DinnerTable.prototype.update = function(deltaTime) {
     }
 };
 
-DinnerTable.prototype.trySetTopic = function() {
-    var sitterCount = 0;
+DinnerTable.prototype.getSitters = function() {
+    var sitters = [];
     for (var i = 0; i < this.chairs.length; ++i) {
         if (this.chairs[i].sitter) {
-            ++sitterCount;
+            sitters.push(this.chairs[i].sitter);
         }
     }
-    if (sitterCount > 1) {
+    return sitters;
+};
+
+DinnerTable.prototype.trySetTopic = function() {
+    var sitters = this.getSitters();
+    if (sitters.length > 1) {
         this.discussionTopic = arrayUtil.randomItem(conversationData);
         this.setText(this.discussionTopic.name);
         this.textMesh.material.opacity = 0.0;
         this.textMesh.material.transparent = true;
-        this.state.change(DinnerTable.State.NEW_TOPIC);
+        this.state.change(DinnerTable.State.TOPIC);
+        
+        for (var i = 0; i < sitters.length; ++i) {
+            sitters[i].newTopic();
+        }
     }
 };
 
