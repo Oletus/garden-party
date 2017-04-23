@@ -9,6 +9,7 @@ var Game = function(resizer, renderer, loadingBar) {
     this.loadingBar = loadingBar;
 
     this.time = 0;
+    mathUtil.seedrandom();
     
     this.initializedAfterLoad = false;
 
@@ -188,7 +189,8 @@ Game.parameters = new GJS.GameParameters({
     'playerMoveSpeed': {initial: 5.0},
     'postProcessingEnabled': {initial: true},
     'shadowsEnabled': {initial: true},
-    'debugVisualizations': {initial: false}
+    'debugVisualizations': {initial: false},
+    'teargravity': {initial: 6.0}
 });
 
 var DEV_MODE = querystringUtil.get('devMode') !== undefined;

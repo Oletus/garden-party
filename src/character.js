@@ -31,8 +31,24 @@ Character.prototype.initCharacter = function(options) {
     this.center.position.x = this.x;
     this.center.position.z = this.z;
     
+    this.leftTearOrigin = new THREE.Object3D();
+    this.leftTearOrigin.position.y = 1.5;
+    this.leftTearOrigin.position.z = 0.25;
+    this.leftTearOrigin.position.x = 0.1;
+    this.leftTearOrigin.rotation.y = Math.PI * 0.5;
+    this.rightTearOrigin = new THREE.Object3D();
+    this.rightTearOrigin.position.y = 1.5;
+    this.rightTearOrigin.position.z = 0.25;
+    this.rightTearOrigin.position.x = -0.1;
+    this.rightTearOrigin.rotation.y = -Math.PI * 0.5;
+    this.center.add(this.leftTearOrigin);
+    this.center.add(this.rightTearOrigin);
+    
+    this.tearsFromLeft = true;
+    
     //this.mesh = Characters[this.id].model.clone();
-    this.mesh = Character.hostessModel.clone()
+    this.mesh = Character.hostessModel.clone();
+    this.mesh.rotation.y = Character.modelRotationOffset;
     this.center.add(this.mesh);
     
     this.initThreeSceneObject({
@@ -41,6 +57,9 @@ Character.prototype.initCharacter = function(options) {
     });
     
     this.addToScene();
+    
+    this.happy = true;
+    this.tearTimer = 0.0;
 };
 
 Character.prototype.update = function(deltaTime) {
@@ -49,6 +68,18 @@ Character.prototype.update = function(deltaTime) {
     } else if (this.carriedBy) {
         this.x = this.carriedBy.x;
         this.z = this.carriedBy.z;
+    }
+    
+    if (!this.happy) {
+        this.tearTimer += deltaTime;
+        if (this.tearTimer > 0.2) {
+            this.level.objects.push(new Tear({
+                sceneParent: this.level.gardenParent,
+                origin: this.tearsFromLeft ? this.leftTearOrigin : this.rightTearOrigin
+            }));
+            this.tearsFromLeft = !this.tearsFromLeft;
+            this.tearTimer -= 0.2;
+        }
     }
 };
 
@@ -89,7 +120,7 @@ Character.prototype.sitOn = function(chair) {
 Character.modelRotationOffset = 0;
 
 Character.prototype.setDisplayAngleFromXZ = function(x, z) {
-    this.center.rotation.y = Math.atan2(x, z) + Character.modelRotationOffset;
+    this.center.rotation.y = Math.atan2(x, z);
 };
 
 Character.prototype.interactionDistance = function(other) {
@@ -120,6 +151,7 @@ Character.prototype.pickUpObject = function(object) {
         object.sittingOn.sitter = null;
         object.sittingOn = null;
     }
+    object.happy = true;
 };
 
 Character.prototype.dropObjectOnChair = function(chair) {
@@ -129,7 +161,7 @@ Character.prototype.dropObjectOnChair = function(chair) {
 };
 
 Character.prototype.newTopic = function() {
-    
+    this.happy = mathUtil.random() < 0.5;
 };
 
 
@@ -242,7 +274,9 @@ PlayerCharacter.prototype.tryPickUpOrDrop = function() {
     }
 };
 
-
+/**
+ * @constructor
+ */
 var InteractionCursor = function(options) {
     var defaults = {
         color: 0xbb3366
@@ -286,6 +320,56 @@ InteractionCursor.prototype.createArrowMesh = function() {
 InteractionCursor.prototype.update = function(deltaTime) {
     this.arrow.rotation.y += deltaTime * Math.PI * 0.5;
 };
+
+
+/**
+ * @constructor
+ */
+var Tear = function(options) {
+    var defaults = {
+        origin: null
+    };
+    objectUtil.initWithDefaults(this, defaults, options);
+
+    this.mesh = new THREE.Mesh(Character.tearGeometry, Character.tearMaterial);
+    this.mesh.position.copy(this.origin.getWorldPosition());
+
+    this.direction = new THREE.Vector3(
+        (mathUtil.random() - 0.5) * 0.2,
+        1.0,
+        (mathUtil.random() * 0.5 + 1.0)
+        );
+    this.direction.applyEuler(this.origin.getWorldRotation());
+    
+    this.initThreeSceneObject({
+        object: this.mesh,
+        sceneParent: options.sceneParent
+    });
+    this.addToScene();
+};
+
+Tear.prototype = new GJS.ThreeSceneObject();
+
+Tear.prototype.update = function(deltaTime) {
+    if (this.dead) {
+        return;
+    }
+    if (this.object.position.y < -1) {
+        this.dead = true;
+        this.removeFromScene();
+    }
+    this.direction.y -= Game.parameters.get('teargravity') * deltaTime;
+    this.object.position.addScaledVector(this.direction, deltaTime);
+    var targetPos = new THREE.Vector3();
+    targetPos.addVectors(this.object.position, this.direction);
+    this.object.lookAt(targetPos);
+};
+
+Character.tearGeometry = new THREE.ConeGeometry(0.1, 0.2, 6);
+Character.tearGeometry.rotateX(-Math.PI * 0.5);
+Character.tearMaterial = new THREE.MeshPhongMaterial({ color: 0x666688, emissive: 0x222266 });
+/*Character.tearMaterial.transparent = true;
+Character.tearMaterial.opacity = 0.5;*/
 
 Character.hostessModel = null;
 

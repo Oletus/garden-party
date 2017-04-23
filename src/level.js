@@ -321,8 +321,14 @@ Level.prototype.update = function(deltaTime) {
     this.cameraControl.update(deltaTime);
     this.cameraControl.setLookAt(this.getLookAtCenter());
 
-    for (var i = 0; i < this.objects.length; ++i) {
+    var i = 0;
+    while (i < this.objects.length) {
         this.objects[i].update(deltaTime);
+        if (this.objects[i].dead) {
+            this.objects.splice(i, 1);
+        } else {
+            ++i;
+        }
     }
 
     if (this.editor) {
