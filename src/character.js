@@ -58,11 +58,23 @@ Character.prototype.initCharacter = function(options) {
     
     this.addToScene();
     
-    this.happy = true;
+    this.lastTopic = null;
+    this.topic = null;
+    this.likes = {}; // Emotional state ids based on topic name
+    
+    this.emotionalState = new GJS.StateMachine({id: Character.EmotionalState.NEUTRAL});
     this.tearTimer = 0.0;
 };
 
+Character.EmotionalState = {
+    HAPPY: 0,
+    NEUTRAL: 1,
+    SAD: 2,
+    LONELY: 3
+};
+
 Character.prototype.update = function(deltaTime) {
+    this.emotionalState.update(deltaTime);
     if (this.sittingOn) {
         this.setDisplayAngleFromXZ(this.sittingOn.direction.x, this.sittingOn.direction.y);
     } else if (this.carriedBy) {
@@ -70,7 +82,7 @@ Character.prototype.update = function(deltaTime) {
         this.z = this.carriedBy.z;
     }
     
-    if (!this.happy) {
+    if (this.emotionalState.id === Character.EmotionalState.SAD && this.emotionalState.time > 1.0) {
         this.tearTimer += deltaTime;
         if (this.tearTimer > 0.2) {
             this.level.objects.push(new Tear({
@@ -109,12 +121,12 @@ Character.prototype.setCarriedBy = function(carriedBy) {
 
 Character.prototype.sitOn = function(chair) {
     if (this.sittingOn !== null) {
-        this.sittingOn.sitter = null;
+        this.sittingOn.setSitter(null);
     }
     this.x = chair.x;
     this.z = chair.z;
     this.sittingOn = chair;
-    chair.sitter = this;
+    chair.setSitter(this);
 };
 
 Character.modelRotationOffset = 0;
@@ -148,10 +160,12 @@ Character.prototype.pickUpObject = function(object) {
     object.setCarriedBy(this);
     this.carrying = object;
     if (object.sittingOn) {
-        object.sittingOn.sitter = null;
+        object.sittingOn.setSitter(null);
         object.sittingOn = null;
     }
-    object.happy = true;
+    if (object.emotionalState) {
+        object.emotionalState.change(Character.EmotionalState.NEUTRAL);
+    }
 };
 
 Character.prototype.dropObjectOnChair = function(chair) {
@@ -160,8 +174,22 @@ Character.prototype.dropObjectOnChair = function(chair) {
     this.carrying = null;
 };
 
-Character.prototype.newTopic = function() {
-    this.happy = mathUtil.random() < 0.5;
+Character.prototype.joinTopic = function(topic) {
+    if (topic === this.topic) {
+        this.emotionalState.changeIfDifferent(this.likes[topic.name]);
+    } else {
+        if (mathUtil.random() < 0.6) {
+            this.emotionalState.changeIfDifferent(Character.EmotionalState.HAPPY);
+        } else {
+            this.emotionalState.changeIfDifferent(Character.EmotionalState.SAD);
+        }
+        this.likes[topic.name] = this.emotionalState.id;
+    }
+    this.topic = topic;
+};
+
+Character.prototype.leftAlone = function() {
+    this.emotionalState.changeIfDifferent(Character.EmotionalState.LONELY);
 };
 
 

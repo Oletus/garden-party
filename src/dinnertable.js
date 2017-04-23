@@ -129,10 +129,6 @@ DinnerTable.prototype.update = function(deltaTime) {
         } else {
             this.textMesh.material.opacity = this.state.time;
         }
-        if (this.getSitters().length <= 1) {
-            this.textMesh.material.transparent = true;
-            this.state.change(DinnerTable.State.REMOVING_TOPIC);
-        }
     } else if (this.state.id === DinnerTable.State.REMOVING_TOPIC) {
         this.textMesh.material.opacity = mathUtil.clamp(0.0, this.textMesh.material.opacity, 1.0 - this.state.time);
         if (this.state.time > 1.0) {
@@ -162,10 +158,28 @@ DinnerTable.prototype.trySetTopic = function() {
         this.state.change(DinnerTable.State.TOPIC);
         
         for (var i = 0; i < sitters.length; ++i) {
-            sitters[i].newTopic();
+            sitters[i].joinTopic(this.discussionTopic);
         }
     }
 };
+
+DinnerTable.prototype.addedSitter = function(sitter) {
+    if (this.state.id === DinnerTable.State.TOPIC) {
+        sitter.joinTopic(this.discussionTopic);
+    }
+};
+
+DinnerTable.prototype.removedSitter = function() {
+    var sitters = this.getSitters();
+    if (sitters.length <= 1) {
+        this.textMesh.material.transparent = true;
+        this.state.change(DinnerTable.State.REMOVING_TOPIC);
+        if (sitters.length === 1) {
+            sitters[0].leftAlone();
+        }
+    }
+};
+
 
 /**
  * @constructor
@@ -212,6 +226,22 @@ Chair.prototype.getColliderRect = function() {
 
 Chair.prototype.setDisplayAngleFromXZ = function(x, z) {
     this.origin.rotation.y = Math.atan2(x, z) + Math.PI;
+};
+
+Chair.prototype.setSitter = function(sitter) {
+    if (sitter === this.sitter) {
+        return;
+    }
+    var previousSitter = this.sitter;
+    this.sitter = sitter;
+    if (this.table) {
+        if (previousSitter !== null) {
+            this.table.removedSitter(previousSitter);
+        }
+        if (sitter !== null) {
+            this.table.addedSitter(this.sitter);
+        }
+    }
 };
 
 GJS.utilTHREE.loadJSONModel('chair', function(object) {
