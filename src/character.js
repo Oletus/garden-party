@@ -32,23 +32,8 @@ Character.prototype.initCharacter = function(options) {
     this.center.position.z = this.z;
     
     //this.mesh = Characters[this.id].model.clone();
-    //this.center.add(this.mesh);
-
-    // TODO: This is just test geometry / collision mesh. Remove.
-    var boxGeometry = new THREE.BoxGeometry(this.size, 2, this.size);
-    var box = new THREE.Mesh(boxGeometry, Level.dinnerTableMaterial);
-    box.position.y = 1;
-    box.castShadow = true;
-    box.receiveShadow = true;
-    this.center.add(box);
-
-    var noseGeometry = new THREE.BoxGeometry(0.1, 0.1, 1.0);
-    var nose = new THREE.Mesh(noseGeometry, Level.dinnerTableMaterial);
-    nose.position.y = 1.5;
-    nose.position.z = -0.5;
-    nose.castShadow = true;
-    nose.receiveShadow = true;
-    this.center.add(nose);
+    this.mesh = Character.hostessModel.clone()
+    this.center.add(this.mesh);
     
     this.initThreeSceneObject({
         object: this.center,
@@ -101,14 +86,16 @@ Character.prototype.sitOn = function(chair) {
     chair.sitter = this;
 };
 
+Character.modelRotationOffset = 0;
+
 Character.prototype.setDisplayAngleFromXZ = function(x, z) {
-    this.center.rotation.y = Math.atan2(x, z) + Math.PI;
+    this.center.rotation.y = Math.atan2(x, z) + Character.modelRotationOffset;
 };
 
 Character.prototype.interactionDistance = function(other) {
     var interactionPointDistance = 0.5;
-    var thisVec = new Vec2(this.x + Math.sin(this.center.rotation.y - Math.PI) * interactionPointDistance, 
-                           this.z + Math.cos(this.center.rotation.y - Math.PI) * interactionPointDistance);
+    var thisVec = new Vec2(this.x + Math.sin(this.center.rotation.y - Character.modelRotationOffset) * interactionPointDistance, 
+                           this.z + Math.cos(this.center.rotation.y - Character.modelRotationOffset) * interactionPointDistance);
     var otherVec = new Vec2(other.x, other.z);
     return thisVec.distance(otherVec);
 };
@@ -299,3 +286,9 @@ InteractionCursor.prototype.createArrowMesh = function() {
 InteractionCursor.prototype.update = function(deltaTime) {
     this.arrow.rotation.y += deltaTime * Math.PI * 0.5;
 };
+
+Character.hostessModel = null;
+
+GJS.utilTHREE.loadJSONModel('hostess', function(object) {
+    Character.hostessModel = object;
+});
