@@ -421,3 +421,9 @@ Level.prototype.updateSpotLightTarget = function() {
     var spotTarget = new THREE.Vector3(Level.gridWidth * 0.5, 0.0, Level.gridDepth * 0.5);
     this.spotLight.target.position.set(spotTarget.x, spotTarget.y, spotTarget.z);
 };
+
+Level.font = null;
+
+GJS.utilTHREE.loadFont('aldo_the_apache_regular', function(font) {
+    Level.font = font;
+});

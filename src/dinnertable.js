@@ -21,13 +21,18 @@ var DinnerTable = function(options) {
         x: 0,
         z: 0,
         width: 2,
-        depth: 2,
+        depth: 2
     };
     objectUtil.initWithDefaults(this, defaults, options);
 
     this.origin = new THREE.Object3D();
     this.origin.position.x = this.x;
     this.origin.position.z = this.z;
+    
+    this.center = new THREE.Object3D();
+    this.center.position.x = this.width * 0.5;
+    this.center.position.z = this.depth * 0.5;
+    this.origin.add(this.center);
     
     var legOffsetX = this.width * 0.5 - 0.2;
     var legOffsetZ = this.depth * 0.5 - 0.2;
@@ -39,12 +44,12 @@ var DinnerTable = function(options) {
     var boxGeometry = new THREE.BoxGeometry(this.width - 0.1, 0.1, this.depth - 0.1);
     var material = Level.dinnerTableMaterial;
     var box = new THREE.Mesh(boxGeometry, material);
-    box.position.x = this.width * 0.5;
-    box.position.z = this.depth * 0.5;
     box.position.y = 1.0;
     box.castShadow = true;
     box.receiveShadow = true;
-    this.origin.add(box);
+    this.center.add(box);
+    
+    this.setText('topic');
     
     this.initThreeSceneObject({
         object: this.origin,
@@ -63,13 +68,43 @@ DinnerTable.prototype.addLeg = function(x, z) {
     var leg = new THREE.Mesh(legGeometry, material);
     leg.position.y = 0.5;
     
-    leg.position.x = x + this.width * 0.5;
-    leg.position.z = z + this.depth * 0.5;
-    this.origin.add(leg);
+    leg.position.x = x;
+    leg.position.z = z;
+    this.center.add(leg);
 }
 
 DinnerTable.prototype.getColliderRect = function() {
     return new Rect(this.x, this.x + this.width, this.z, this.z + this.depth);
+};
+
+DinnerTable.textMaterial = new THREE.MeshPhongMaterial( { color: 0x333333, specular: 0x000000 } );
+
+DinnerTable.prototype.createTextMesh = function(text) {
+    var textGeo = new THREE.TextGeometry( text, {
+        font: Level.font,
+        size: 0.5,
+        height: 0.05,
+        curveSegments: 1,
+        bevelEnabled: false,
+    });
+    textGeo.center();
+    var textMesh = new THREE.Mesh( textGeo, DinnerTable.textMaterial );
+    textMesh.position.z = 0.1;
+    return textMesh;
+};
+
+DinnerTable.prototype.setText = function(text) {
+    if (this.textMesh) {
+        this.center.remove(this.textMesh);
+    }
+    this.textMesh = this.createTextMesh(text);
+    this.textMesh.position.y = 1.5;
+    this.textMesh.rotation.y = Math.PI;
+    this.center.add(this.textMesh);
+};
+
+DinnerTable.prototype.update = function(deltaTime) {
+    this.textMesh.rotation.y += deltaTime;
 };
 
 /**
