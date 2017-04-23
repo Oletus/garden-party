@@ -275,7 +275,7 @@ Level.prototype.getChairs = function() {
 Level.prototype.reinitGuests = function() {
     this.removeObjects(this.guests);
     var chairs = this.getChairs();
-    var guestsCount = chairs.length - 2;
+    var guestsCount = chairs.length - 3;
     var chairsToPopulate = arrayUtil.randomSubset(chairs, guestsCount);
     for (var i = 0; i < chairsToPopulate.length; ++i) {
         var chair = chairsToPopulate[i];
