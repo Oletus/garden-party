@@ -255,8 +255,9 @@ PlayerCharacter.prototype.update = function(deltaTime) {
         this.physicsShim.dy *= movementMult;
         this.setDisplayAngleFromXZ(this.physicsShim.dx, this.physicsShim.dy);
     }
-    this.physicsShim.dx *= Game.parameters.get('playerMoveSpeed');
-    this.physicsShim.dy *= Game.parameters.get('playerMoveSpeed');
+    var moveSpeed = Game.parameters.get('playerMoveSpeed') * (this.carrying === null ? 1.0 : 0.5);
+    this.physicsShim.dx *= moveSpeed;
+    this.physicsShim.dy *= moveSpeed;
     GJS.PlatformingPhysics.moveAndCollide(this.physicsShim, deltaTime, 'x', [this.level.physicalCollisionTileMap]);
     GJS.PlatformingPhysics.moveAndCollide(this.physicsShim, deltaTime, 'y', [this.level.physicalCollisionTileMap]);
 
