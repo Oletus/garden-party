@@ -189,6 +189,8 @@ Game.parameters = new GJS.GameParameters({
     'playerMoveSpeed': {initial: 5.0},
     'gooseWalkSpeed': {initial: 2.0},
     'gooseChaseSpeed': {initial: 6.0},
+    'gooseLineOfSightChaseDistance': {initial: 4.0},
+    'gooseBiteStunTime': {initial: 2.0},
     'postProcessingEnabled': {initial: true},
     'shadowsEnabled': {initial: true},
     'debugVisualizations': {initial: false},

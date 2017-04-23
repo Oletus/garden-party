@@ -66,6 +66,13 @@ Character.prototype.initCharacter = function(options) {
     
     this.emotionalState = new GJS.StateMachine({id: Character.EmotionalState.NEUTRAL});
     this.tearTimer = 0.0;
+    
+    this.state = new GJS.StateMachine({id: Character.State.NORMAL});
+};
+
+Character.State = {
+    NORMAL: 0,
+    STUNNED: 1
 };
 
 Character.EmotionalState = {
@@ -76,6 +83,7 @@ Character.EmotionalState = {
 };
 
 Character.prototype.update = function(deltaTime) {
+    this.state.update(deltaTime);
     this.emotionalState.update(deltaTime);
     if (this.sittingOn) {
         this.setDisplayAngleFromXZ(this.sittingOn.direction.x, this.sittingOn.direction.y);
@@ -192,6 +200,11 @@ Character.prototype.leftAlone = function() {
     this.emotionalState.changeIfDifferent(Character.EmotionalState.LONELY);
 };
 
+Character.prototype.getBitten = function() {
+    this.state.change(Character.State.STUNNED);
+};
+
+
 
 var Guest = function(options) {
     this.initCharacter(options);
@@ -225,6 +238,12 @@ PlayerCharacter.prototype.update = function(deltaTime) {
     Character.prototype.update.call(this, deltaTime);
 
     var moveSpeed = Game.parameters.get('playerMoveSpeed') * (this.carrying === null ? 1.0 : 0.5);
+    if (this.state.id === Character.State.STUNNED) {
+        moveSpeed = 0.0;
+        if (this.state.time > Game.parameters.get('gooseBiteStunTime')) {
+            this.state.change(Character.State.NORMAL);
+        }
+    }
     this.physicsShim.move(deltaTime, this.xMoveIntent, this.zMoveIntent, moveSpeed);
     if (this.physicsShim.dx != 0.0 || this.physicsShim.dy != 0.0) {
         this.setDisplayAngleFromXZ(this.physicsShim.dx, this.physicsShim.dy);

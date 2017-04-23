@@ -23,6 +23,7 @@ var Goose = function(options) {
     this.zMoveIntent = 0;
     
     this.state = new GJS.StateMachine({id: Goose.State.SITTING});
+    this.lastBiteTime = -10.0;
     this.sitYOffset = 0.1;
     this.walkYOffset = 0.6;
     this.startSitting();
@@ -62,6 +63,7 @@ Goose.State = {
     SITTING: 0,
     WALKING: 1,
     CHASING: 2,
+    BITING: 3
 };
 
 Goose.prototype.randomIdleState = function() {
@@ -97,9 +99,45 @@ Goose.prototype.startWalking = function() {
     }
 };
 
+Goose.prototype.startChasing = function(chaseTarget) {
+    this.state.change(Goose.State.CHASING);
+    this.chaseTarget = chaseTarget;
+    if (Math.abs(this.x - chaseTarget.x) > Math.abs(this.z - chaseTarget.z)) {
+        this.xMoveIntent = chaseTarget.x - this.x;
+        this.zMoveIntent = 0.0;
+    } else {
+        this.xMoveIntent = 0.0;
+        this.zMoveIntent = chaseTarget.z - this.z;
+    }
+};
+
+Goose.prototype.bite = function(biteTarget) {
+    biteTarget.getBitten();
+    this.state.change(Goose.State.BITING);
+    this.lastBiteTime = this.state.lifeTime;
+};
+
 Goose.prototype.update = function(deltaTime) {
     this.state.update(deltaTime);
     var moveSpeed = 0.0;
+    if (this.state.id !== Goose.State.CHASING && this.state.lifeTime - this.lastBiteTime > Game.parameters.get('gooseBiteStunTime')) {
+        // See if the goose needs to start chasing the player.
+        // It will chase if the player is on its line of sight, or if the player gets very close.
+        var lineOfSightRect = new Rect(this.x - 0.1, this.x + 0.1, this.z - 0.1, this.z + 0.1);
+        var xOffset = Math.sin(this.center.rotation.y);
+        var zOffset = Math.cos(this.center.rotation.y);
+        var chaseDistance = Game.parameters.get('gooseLineOfSightChaseDistance');
+        lineOfSightRect.unionRect(new Rect(
+            this.x + xOffset * chaseDistance - 0.1,
+            this.x + xOffset * chaseDistance + 0.1,
+            this.z + zOffset * chaseDistance - 0.1,
+            this.z + zOffset * chaseDistance + 0.1
+            ));
+        if (this.level.playerCharacter.physicsShim.getCollisionRect().intersectsRect(lineOfSightRect)) {
+            this.startChasing(this.level.playerCharacter);
+        }
+    }
+    
     if (this.state.id === Goose.State.SITTING) {
         if (this.state.time > this.nextStateChangeTime) {
             this.randomIdleState();
@@ -110,9 +148,22 @@ Goose.prototype.update = function(deltaTime) {
         if (this.state.time > this.nextStateChangeTime && this.closeToTileCenter()) {
             this.randomIdleState();
         }
-        this.mesh.position.y = this.walkYOffset + (Math.sin(this.state.time * 12.0) > 0.0 ? 0.1 : 0.0);
-    } else {
-        moveSpeed = Game.parameters.get('gooseChaseSpeed');
+        this.mesh.position.y = this.walkYOffset + (Math.sin(this.state.lifeTime * 12.0) > 0.0 ? 0.1 : 0.0);
+    } else if (this.state.id === Goose.State.CHASING) {
+        moveSpeed = mathUtil.mix(Game.parameters.get('gooseWalkSpeed'), Game.parameters.get('gooseChaseSpeed'), mathUtil.clamp(0.0, 1.0, this.state.time * 1.5));
+        if (this.chaseTarget.center.position.distanceTo(this.center.position) < 1.0) {
+            this.bite(this.chaseTarget);
+            moveSpeed = 0.0;
+        }
+        if ((this.chaseTarget.x - this.x) * this.xMoveIntent < 0 ||
+            (this.chaseTarget.z - this.z) * this.zMoveIntent < 0) {
+            this.state.change(Goose.State.WALKING);
+        }
+        this.mesh.position.y = this.walkYOffset + (Math.sin(this.state.lifeTime * 12.0) > 0.0 ? 0.1 : 0.0);
+    } else if (this.state.id === Goose.State.BITING) {
+        if (this.state.time > 0.5) {
+            this.startWalking();
+        }
     }
     this.physicsShim.move(deltaTime, this.xMoveIntent, this.zMoveIntent, moveSpeed);
     if (this.physicsShim.dx != 0.0 || this.physicsShim.dy != 0.0) {
