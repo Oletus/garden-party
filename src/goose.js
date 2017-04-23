@@ -32,6 +32,7 @@ var Goose = function(options) {
     this.center.position.x = this.x;
     this.center.position.z = this.z;
     
+    // TODO: Add a proper goose model
     var gooseGeometry = new THREE.BoxGeometry(0.9, 0.5, 0.5);
     this.mesh = new THREE.Mesh(gooseGeometry, Level.dinnerTableMaterial);
     var neckGeometry = new THREE.BoxGeometry(0.15, 0.5, 0.15);
@@ -77,14 +78,22 @@ Goose.prototype.startSitting = function() {
 };
 
 Goose.prototype.startWalking = function() {
-    this.state.change(Goose.State.WALKING);
-    this.nextStateChangeTime = mathUtil.random() * 2.0 + 0.8;
-    if (mathUtil.random() < 0.5) {
-        this.xMoveIntent = mathUtil.random() < 0.5 ? -1.0 : 1.0;
-        this.zMoveIntent = 0.0;
-    } else {
-        this.xMoveIntent = 0.0;
-        this.zMoveIntent = mathUtil.random() < 0.5 ? -1.0 : 1.0;
+    var directions = this.level.collisionTileMap.getDistancesByCardinalDirection(
+        this.level.collisionTileMap.tileAt(this.x, this.z),
+        function(tile) { return tile.isWall(); });
+    var candidates = [];
+    for (var i = 0; i < 4; ++i) {
+        if (directions[i] >= 2) {
+            candidates.push(i);
+        }
+    }
+    if (candidates.length > 0) {
+        this.state.change(Goose.State.WALKING);
+        this.nextStateChangeTime = mathUtil.random() * 2.0 + 0.8;
+        var chosenDirection = arrayUtil.randomItem(candidates);
+        var moveIntent = GJS.CardinalDirection.toVec2(chosenDirection);
+        this.xMoveIntent = moveIntent.x;
+        this.zMoveIntent = moveIntent.y;
     }
 };
 

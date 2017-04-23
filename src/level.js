@@ -179,7 +179,7 @@ Level.prototype.generateTileEditorObjectsFromTiles = function(tilemap) {
     }
     var chairPositions = tilemap.getTileCoords(isChair);
     for (var i = 0; i < chairPositions.length; ++i) {
-        var tableDirection = tilemap.getNearestTileDirection(chairPositions[i], isTable);
+        var tableDirection = GJS.CardinalDirection.toVec2(tilemap.getNearestTileDirection(chairPositions[i], isTable));
         
         var chairX = chairPositions[i].x + 0.5;
         var chairZ = chairPositions[i].y + 0.5
