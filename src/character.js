@@ -241,7 +241,7 @@ PlayerCharacter.prototype = new Character();
 PlayerCharacter.prototype.update = function(deltaTime) {
     Character.prototype.update.call(this, deltaTime);
 
-    var moveSpeed = Game.parameters.get('playerMoveSpeed') * (this.carrying === null ? 1.0 : 0.5);
+    var moveSpeed = Game.parameters.get('playerMoveSpeed') * (this.carrying === null ? 1.0 : 0.7);
     if (this.state.id === Character.State.STUNNED) {
         moveSpeed = 0.0;
         if (this.state.time > Game.parameters.get('gooseBiteStunTime')) {
