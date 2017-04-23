@@ -76,3 +76,83 @@ GJS.ThreeSceneObject.prototype.getOwnQueryObject = function() {
  */
 GJS.ThreeSceneObject.prototype.update = function(deltaTime) {
 };
+
+
+
+/**
+ * An object that owns a text string that's displayed as a Three.js scene object.
+ * @constructor
+ */
+GJS.ThreeTextObject = function() {
+};
+
+GJS.ThreeTextObject.prototype = new GJS.ThreeSceneObject();
+
+GJS.ThreeTextObject.prototype.initThreeTextObject = function(options) {
+    var defaults = {
+        string: "",
+        maxRowLength: -1,
+        rowSpacing: 1.3
+    };
+    objectUtil.initWithDefaults(this, defaults, options);
+    
+    this.initThreeSceneObject(options);
+    this.object = new THREE.Object3D();
+    
+    var string = this.string;
+    this.string = "";
+    this.setString(string);
+};
+
+/**
+ * @param {string} string
+ */
+GJS.ThreeTextObject.prototype.setString = function(string) {
+    this.string = string;
+    this.stringSplitToRows = stringUtil.splitToRows(this.string, this.maxRowLength);
+};
+
+/**
+ * An object that displays a text string as an extruded Three.js mesh.
+ * @constructor
+ */
+GJS.ThreeExtrudedTextObject = function(options) {
+    var defaults = {
+        material: GJS.ThreeExtrudedTextObject.defaultMaterial,
+        font: GJS.ThreeExtrudedTextObject.defaultFont
+    };
+    objectUtil.initWithDefaults(this, defaults, options);
+    this.initThreeTextObject(options);
+};
+
+GJS.ThreeExtrudedTextObject.defaultMaterial = new THREE.MeshPhongMaterial( { color: 0x333333, specular: 0x000000 } );
+GJS.ThreeExtrudedTextObject.defaultFont = null;
+
+GJS.ThreeExtrudedTextObject.prototype = new GJS.ThreeTextObject();
+
+GJS.ThreeExtrudedTextObject.prototype.setString = function(string) {
+    if (string != this.string) {
+        GJS.ThreeTextObject.prototype.setString.call(this, string);
+        while (this.object.children.length > 0) {
+            this.object.remove(this.object.children[0]);
+        }
+        for (var i = 0; i < this.stringSplitToRows.length; ++i) {
+            var rowMesh = this._createTextMesh(this.stringSplitToRows[i]);
+            rowMesh.position.y = (this.stringSplitToRows.length - i - 0.5) * this.rowSpacing;
+            this.object.add(rowMesh);
+        }
+    }
+};
+
+GJS.ThreeExtrudedTextObject.prototype._createTextMesh = function(string) {
+    var textGeo = new THREE.TextGeometry( string, {
+        font: this.font,
+        size: 1,
+        height: 0.1,
+        curveSegments: 1,
+        bevelEnabled: false,
+    });
+    textGeo.center();
+    var textMesh = new THREE.Mesh( textGeo, this.material );
+    return textMesh;
+};

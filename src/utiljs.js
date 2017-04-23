@@ -201,6 +201,35 @@ stringUtil.capitalizeFirstLetter = function(string) {
 };
 
 /**
+ * Split text into rows. The text is split at spaces.
+ * @param {string} toSplit String to split.
+ * @param {number} maxRowLength Maximum length of row in characters. If < 0, don't split.
+ */
+stringUtil.splitToRows = function(toSplit, maxRowLength) {
+    var splitRows = toSplit;
+    if (!(splitRows instanceof Array)) {
+        if (maxRowLength < 0) {
+            splitRows = [toSplit];
+        } else {
+            splitRows = [];
+            var rowStartIndex = 0;
+            var spaceIndex = toSplit.indexOf(' ');
+            while (toSplit.length - rowStartIndex > maxRowLength) {
+                var prevSpaceIndex = spaceIndex;
+                while (spaceIndex - rowStartIndex < maxRowLength && spaceIndex !== -1) {
+                    prevSpaceIndex = spaceIndex;
+                    spaceIndex = toSplit.indexOf(' ', prevSpaceIndex + 1);
+                }
+                splitRows.push(toSplit.substring(rowStartIndex, prevSpaceIndex));
+                rowStartIndex = prevSpaceIndex + 1;
+            }
+            splitRows.push(toSplit.substring(rowStartIndex));
+        }
+    }
+    return splitRows;
+};
+
+/**
  * Initialize an object with default values.
  * @param {Object} obj Object to set properties on.
  * @param {Object} defaults Default properties. Every property needs to have a default value here.

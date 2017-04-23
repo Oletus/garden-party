@@ -432,11 +432,10 @@ Level.prototype.updateSpotLightTarget = function() {
     this.spotLight.target.position.set(spotTarget.x, spotTarget.y, spotTarget.z);
 };
 
-Level.font = null;
 Level.sceneryModel = null;
 
 GJS.utilTHREE.loadFont('aldo_the_apache_regular', function(font) {
-    Level.font = font;
+    GJS.ThreeExtrudedTextObject.defaultFont = font;
 });
 GJS.utilTHREE.loadJSONModel('base_layer', function(object) {
     Level.sceneryModel = object;

@@ -1,5 +1,7 @@
 'use strict';
 
+// Requires utiljs.js
+
 if (typeof GJS === "undefined") {
     var GJS = {};
 }
@@ -114,7 +116,7 @@ GJS.MonospaceBitmapFont.prototype.drawText = function(ctx, string, x, y) {
  * @param {number} rowHeight Row height in coordinates.
  */
 GJS.MonospaceBitmapFont.prototype.drawTextInRows = function(ctx, textToRender, x, y, maxRowLength, rowHeight) {
-    var renderedRows = this._splitRows(textToRender, maxRowLength);
+    var renderedRows = stringUtil.splitToRows(textToRender, maxRowLength);
     for (var i = 0; i < renderedRows.length; ++i) {
         this.drawText(ctx, renderedRows[i], x, y + i * rowHeight);
     }
@@ -126,35 +128,5 @@ GJS.MonospaceBitmapFont.prototype.drawTextInRows = function(ctx, textToRender, x
  * @return {number} Number of rows that would get drawn if drawTextInRows is called with the same arguments.
  */
 GJS.MonospaceBitmapFont.prototype.getNumberOfRows = function(textToRender, maxRowLength) {
-    return this._splitRows(textToRender, maxRowLength).length;
-};
-
-/**
- * Split text into rows. The text is split at spaces.
- * @param {string} textToRender String to draw.
- * @param {number} maxRowLength Maximum length of row in characters.
- * @protected
- */
-GJS.MonospaceBitmapFont.prototype._splitRows = function(textToRender, maxRowLength) {
-    var renderedRows = textToRender;
-    if (!(renderedRows instanceof Array)) {
-        if (maxRowLength < 0) {
-            renderedRows = [textToRender];
-        } else {
-            renderedRows = [];
-            var rowStartIndex = 0;
-            var spaceIndex = textToRender.indexOf(' ');
-            while (textToRender.length - rowStartIndex > maxRowLength) {
-                var prevSpaceIndex = spaceIndex;
-                while (spaceIndex - rowStartIndex < maxRowLength && spaceIndex !== -1) {
-                    prevSpaceIndex = spaceIndex;
-                    spaceIndex = textToRender.indexOf(' ', prevSpaceIndex + 1);
-                }
-                renderedRows.push(textToRender.substring(rowStartIndex, prevSpaceIndex));
-                rowStartIndex = prevSpaceIndex + 1;
-            }
-            renderedRows.push(textToRender.substring(rowStartIndex));
-        }
-    }
-    return renderedRows;
+    return stringUtil.splitToRows(textToRender, maxRowLength).length;
 };

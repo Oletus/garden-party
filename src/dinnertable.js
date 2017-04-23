@@ -59,46 +59,32 @@ var DinnerTable = function(options) {
     
     this.conversationScore = 0;
     
-    this.topicTextMaterial = DinnerTable.topicTextMaterial.clone();
     this.textParent = new THREE.Object3D();
     this.textParent.position.y = 1.5;
     this.center.add(this.textParent);
 
-    this.topicTextParent = new THREE.Object3D();
-    this.topicTextParent.visible = false;
-    this.textParent.add(this.topicTextParent);
+    this.topicTextMaterial = DinnerTable.topicTextMaterial.clone();
+    this.scoreTextMaterial = DinnerTable.scoreTextMaterial.clone();
+    this.scoreTextMaterial.transparent = true;
+    this.failTextMaterial = DinnerTable.failTextMaterial.clone();
+    this.failTextMaterial.transparent = true;
     
-    this.topicTitleTextMesh = this.createTextMesh('TOPIC:', this.topicTextMaterial);
-    this.topicTitleTextMesh.position.y = 0.6;
-    this.topicTextParent.add(this.topicTitleTextMesh);
-
-    {
-        this.scoreTextMaterial = DinnerTable.scoreTextMaterial.clone();
-        this.scoreTextMaterial.transparent = true;
-        this.scoreTextParent = new THREE.Object3D();
-        this.scoreTextParent.visible = false;
-        this.textParent.add(this.scoreTextParent);
-        
-        var pleasantTextMesh = this.createTextMesh('PLEASANT', this.scoreTextMaterial);
-        pleasantTextMesh.position.y = 0.6;
-        this.scoreTextParent.add(pleasantTextMesh);
-        var conversationTextMesh = this.createTextMesh('CONVERSATION!', this.scoreTextMaterial);
-        this.scoreTextParent.add(conversationTextMesh);
-    }
-    
-    {
-        this.failTextMaterial = DinnerTable.failTextMaterial.clone();
-        this.failTextMaterial.transparent = true;
-        this.failTextParent = new THREE.Object3D();
-        this.failTextParent.visible = false;
-        this.textParent.add(this.failTextParent);
-        
-        var dreadfulTextMesh = this.createTextMesh('DREADFUL', this.failTextMaterial);
-        dreadfulTextMesh.position.y = 0.6;
-        this.failTextParent.add(dreadfulTextMesh);
-        var conversationTextMesh = this.createTextMesh('CONVERSATION!', this.failTextMaterial);
-        this.failTextParent.add(conversationTextMesh);
-    }
+    this.topicText = new GJS.ThreeExtrudedTextObject({
+        sceneParent: this.textParent,
+        material: this.topicTextMaterial
+        });
+    this.scoreText = new GJS.ThreeExtrudedTextObject({
+        sceneParent: this.textParent,
+        string: 'PLEASANT CONVERSATION!',
+        maxRowLength: 15,
+        material: this.scoreTextMaterial
+        });
+    this.failText = new GJS.ThreeExtrudedTextObject({
+        sceneParent: this.textParent,
+        string: 'DREADFUL CONVERSATION!',
+        maxRowLength: 15, material:
+        this.failTextMaterial
+        });
     
     this.initThreeSceneObject({
         object: this.origin,
@@ -139,43 +125,27 @@ DinnerTable.topicTextMaterial = new THREE.MeshPhongMaterial( { color: 0x333333, 
 DinnerTable.scoreTextMaterial = new THREE.MeshPhongMaterial( { color: 0x888833, specular: 0x000000, emissive: 0x444433} );
 DinnerTable.failTextMaterial = new THREE.MeshPhongMaterial( { color: 0x880000, specular: 0x000000, emissive: 0x550000 } );
 
-DinnerTable.prototype.createTextMesh = function(text, material) {
-    var textGeo = new THREE.TextGeometry( text, {
-        font: Level.font,
-        size: 0.4,
-        height: 0.05,
-        curveSegments: 1,
-        bevelEnabled: false,
-    });
-    textGeo.center();
-    var textMesh = new THREE.Mesh( textGeo, material );
-    return textMesh;
-};
-
 DinnerTable.prototype.setTopicText = function(text) {
-    if (this.topicTextMesh) {
-        this.topicTextParent.remove(this.topicTextMesh);
-    }
-    this.topicTextMesh = this.createTextMesh(text, this.topicTextMaterial);
-    this.topicTextParent.rotation.y = Math.PI;
-    this.topicTextParent.visible = true;
-    this.topicTextParent.add(this.topicTextMesh);
+    this.topicText.setString(['TOPIC:', text]);
+    this.topicText.object.rotation.y = Math.PI;
+    this.topicText.addToScene();
 };
 
 DinnerTable.prototype.update = function(deltaTime) {
-    this.topicTextParent.rotation.y += deltaTime * 0.5;
-    if (this.topicTextParent.rotation.y > -Math.PI * 0.5) {
-        this.topicTextParent.rotation.y -= Math.PI;
+    this.topicText.object.rotation.y += deltaTime * 0.5;
+    if (this.topicText.object.rotation.y > -Math.PI * 0.5) {
+        this.topicText.object.rotation.y -= Math.PI;
     }
     
     this.state.update(deltaTime);
     if (this.state.id === DinnerTable.State.SCORING_TOPIC) {
-        var textParent = this.getConversationScoreTextParent();
-        textParent.position.y = this.state.time;
-        textParent.children[0].material.opacity = mathUtil.clamp(0.0, 1.0, Math.min(this.state.time, 3.0 - this.state.time));
+        var text = this.getConversationScoreText();
+        text.object.position.y = this.state.time;
+        // TODO: This is hacky... should choose the material object some other way
+        text.object.children[0].material.opacity = mathUtil.clamp(0.0, 1.0, Math.min(this.state.time, 3.0 - this.state.time));
         if (this.state.time > 3.0) {
             this.state.change(DinnerTable.State.NO_TOPIC);
-            textParent.visible = false;
+            text.removeFromScene();
         }
     } else if (this.state.id === DinnerTable.State.NO_TOPIC) {
         if (this.state.time > 1.0) {
@@ -203,13 +173,13 @@ DinnerTable.prototype.update = function(deltaTime) {
     } else if (this.state.id === DinnerTable.State.REMOVING_TOPIC) {
         this.topicTextMaterial.opacity = mathUtil.clamp(0.0, this.topicTextMaterial.opacity, 1.0 - this.state.time);
         if (this.state.time > 1.0) {
-            this.topicTextParent.visible = false;
+            this.topicText.removeFromScene();
             if (this.conversationScore !== 0) {
                 this.state.change(DinnerTable.State.SCORING_TOPIC);
-                var textParent = this.getConversationScoreTextParent();
-                textParent.visible = true;
-                textParent.position.y = 0.0;
-                textParent.rotation.y = Math.PI;
+                var text = this.getConversationScoreText();
+                text.addToScene();
+                text.object.position.y = 0.0;
+                text.object.rotation.y = Math.PI;
             } else {
                 this.state.change(DinnerTable.State.NO_TOPIC);
             }
@@ -217,8 +187,8 @@ DinnerTable.prototype.update = function(deltaTime) {
     }
 };
 
-DinnerTable.prototype.getConversationScoreTextParent = function() {
-    return this.conversationScore > 0 ? this.scoreTextParent : this.failTextParent;
+DinnerTable.prototype.getConversationScoreText = function() {
+    return this.conversationScore > 0 ? this.scoreText : this.failText;
 };
 
 DinnerTable.prototype.getSitters = function() {
