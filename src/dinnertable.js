@@ -49,7 +49,10 @@ var DinnerTable = function(options) {
     box.receiveShadow = true;
     this.center.add(box);
     
-    this.setText('topic');
+    this.state = new GJS.StateMachine({stateSet: DinnerTable.State, id: DinnerTable.State.NO_TOPIC});
+    this.chairs = [];
+    
+    this.discussionTopic = null;
     
     this.initThreeSceneObject({
         object: this.origin,
@@ -60,6 +63,13 @@ var DinnerTable = function(options) {
 };
 
 DinnerTable.prototype = new GridSceneObject();
+
+DinnerTable.State = {
+    NO_TOPIC: 0,
+    NEW_TOPIC: 1,
+    TOPIC: 2,
+    REMOVING_TOPIC: 3
+};
 
 DinnerTable.prototype.addLeg = function(x, z) {
     //var leg = TableLeg.model.clone();
@@ -82,13 +92,13 @@ DinnerTable.textMaterial = new THREE.MeshPhongMaterial( { color: 0x333333, specu
 DinnerTable.prototype.createTextMesh = function(text) {
     var textGeo = new THREE.TextGeometry( text, {
         font: Level.font,
-        size: 0.5,
+        size: 0.4,
         height: 0.05,
         curveSegments: 1,
         bevelEnabled: false,
     });
     textGeo.center();
-    var textMesh = new THREE.Mesh( textGeo, DinnerTable.textMaterial );
+    var textMesh = new THREE.Mesh( textGeo, DinnerTable.textMaterial.clone() );
     textMesh.position.z = 0.1;
     return textMesh;
 };
@@ -104,7 +114,45 @@ DinnerTable.prototype.setText = function(text) {
 };
 
 DinnerTable.prototype.update = function(deltaTime) {
-    this.textMesh.rotation.y += deltaTime;
+    if (this.textMesh) {
+        this.textMesh.rotation.y += deltaTime;
+    }
+    
+    this.state.update(deltaTime);
+    if (this.state.id === DinnerTable.State.NO_TOPIC) {
+        if (this.state.time > 1.0) {
+            this.trySetTopic();
+        }
+    } else if (this.state.id === DinnerTable.State.NEW_TOPIC) {
+        this.textMesh.material.opacity = this.state.time;
+        if (this.state.time > 1.0) {
+            this.textMesh.material.opacity = 1.0;
+            this.textMesh.material.transparent = false;
+            this.state.change(DinnerTable.State.TOPIC);
+        }
+    } else if (this.state.id === DinnerTable.State.REMOVING_TOPIC) {
+        this.textMesh.material.opacity = mathUtil.clamp(0.0, 1.0, 1.0 - this.state.time);
+        if (this.state.time > 1.0) {
+            this.textMesh.visible = false;
+            this.state.change(DinnerTable.State.NO_TOPIC);
+        }
+    }
+};
+
+DinnerTable.prototype.trySetTopic = function() {
+    var sitterCount = 0;
+    for (var i = 0; i < this.chairs.length; ++i) {
+        if (this.chairs[i].sitter) {
+            ++sitterCount;
+        }
+    }
+    if (sitterCount > 1) {
+        this.discussionTopic = arrayUtil.randomItem(conversationData);
+        this.setText(this.discussionTopic.name);
+        this.textMesh.material.opacity = 0.0;
+        this.textMesh.material.transparent = true;
+        this.state.change(DinnerTable.State.NEW_TOPIC);
+    }
 };
 
 /**
@@ -120,6 +168,10 @@ var Chair = function(options) {
         sitter: null
     };
     objectUtil.initWithDefaults(this, defaults, options);
+    
+    if (this.table) {
+        this.table.chairs.push(this);
+    }
     
     this.origin = new THREE.Object3D();
     this.origin.position.x = this.x;
