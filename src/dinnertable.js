@@ -73,18 +73,21 @@ var DinnerTable = function(options) {
         sceneParent: this.textParent,
         material: this.topicTextMaterial
         });
+    this.topicText.object.scale.multiplyScalar(0.6);
     this.scoreText = new GJS.ThreeExtrudedTextObject({
         sceneParent: this.textParent,
         string: 'PLEASANT CONVERSATION!',
         maxRowLength: 15,
         material: this.scoreTextMaterial
         });
+    this.scoreText.object.scale.multiplyScalar(0.6);
     this.failText = new GJS.ThreeExtrudedTextObject({
         sceneParent: this.textParent,
         string: 'DREADFUL CONVERSATION!',
-        maxRowLength: 15, material:
-        this.failTextMaterial
+        maxRowLength: 15,
+        material: this.failTextMaterial
         });
+    this.failText.object.scale.multiplyScalar(0.6);
     
     this.initThreeSceneObject({
         object: this.origin,
@@ -141,7 +144,7 @@ DinnerTable.prototype.update = function(deltaTime) {
     if (this.state.id === DinnerTable.State.SCORING_TOPIC) {
         var text = this.getConversationScoreText();
         text.object.position.y = this.state.time;
-        // TODO: This is hacky... should choose the material object some other way
+        // TODO: This is hacky... should choose the material object to change some other way
         text.object.children[0].material.opacity = mathUtil.clamp(0.0, 1.0, Math.min(this.state.time, 3.0 - this.state.time));
         if (this.state.time > 3.0) {
             this.state.change(DinnerTable.State.NO_TOPIC);

@@ -119,7 +119,10 @@ GJS.ThreeTextObject.prototype.setString = function(string) {
 GJS.ThreeExtrudedTextObject = function(options) {
     var defaults = {
         material: GJS.ThreeExtrudedTextObject.defaultMaterial,
-        font: GJS.ThreeExtrudedTextObject.defaultFont
+        font: GJS.ThreeExtrudedTextObject.defaultFont,
+        extrusionHeight: 0.1,
+        curveSegments: 1,
+        bevelEnabled: false
     };
     objectUtil.initWithDefaults(this, defaults, options);
     this.initThreeTextObject(options);
@@ -148,9 +151,9 @@ GJS.ThreeExtrudedTextObject.prototype._createTextMesh = function(string) {
     var textGeo = new THREE.TextGeometry( string, {
         font: this.font,
         size: 1,
-        height: 0.1,
-        curveSegments: 1,
-        bevelEnabled: false,
+        height: this.extrusionHeight,
+        curveSegments: this.curveSegments,
+        bevelEnabled: this.bevelEnabled,
     });
     textGeo.center();
     var textMesh = new THREE.Mesh( textGeo, this.material );
