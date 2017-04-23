@@ -198,6 +198,8 @@ Level.prototype.generateTileEditorObjectsFromTiles = function(tilemap) {
                     }
                 }
             }
+        } else {
+            tableDirection = new Vec2(1, 0);
         }
         this.addTileEditorObject(new Chair({
             sceneParent: this.tileEditorObjectParent,
