@@ -160,11 +160,31 @@ Level.prototype.generateTileEditorObjectsFromTiles = function(tilemap) {
     var chairPositions = tilemap.getTileCoords(isChair);
     for (var i = 0; i < chairPositions.length; ++i) {
         var tableDirection = tilemap.getNearestTileDirection(chairPositions[i], isTable);
+        
+        var chairX = chairPositions[i].x + 0.5;
+        var chairZ = chairPositions[i].y + 0.5
+        
+        // Associate chair with the nearest table
+        var dinnerTableLookupPosition = new Vec2(chairX, chairZ);
+        var table = null;
+        if (tableDirection.length() != 0) {
+            while (table === null) {
+                dinnerTableLookupPosition.translate(tableDirection);
+                for (var j = 0; j < this.objects.length; ++j) {
+                    if (this.objects[j] instanceof DinnerTable) {
+                        if (this.objects[j].getColliderRect().containsVec2(dinnerTableLookupPosition)) {
+                            table = this.objects[j];
+                        }
+                    }
+                }
+            }
+        }
         this.addTileEditorObject(new Chair({
             sceneParent: this.tileEditorObjectParent,
-            x: chairPositions[i].x + 0.5,
-            z: chairPositions[i].y + 0.5,
-            direction: tableDirection
+            x: chairX,
+            z: chairZ,
+            direction: tableDirection,
+            table: table
             }));
     }
     this.updateCollisionGridFromObjects();
