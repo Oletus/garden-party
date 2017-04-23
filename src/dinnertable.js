@@ -76,6 +76,8 @@ DinnerTable.prototype.addLeg = function(x, z) {
     var legGeometry = new THREE.BoxGeometry(0.1, 1.0, 0.1);
     var material = Level.dinnerTableMaterial;
     var leg = new THREE.Mesh(legGeometry, material);
+    leg.castShadow = true;
+    leg.receiveShadow = true;
     leg.position.y = 0.5;
     
     leg.position.x = x;
