@@ -85,6 +85,15 @@ Character.EmotionalState = {
 Character.prototype.update = function(deltaTime) {
     this.state.update(deltaTime);
     this.emotionalState.update(deltaTime);
+    if (this.state.id === Character.State.STUNNED) {
+        this.center.rotation.z = Math.sin(this.state.time * Math.PI * 2.0) * 0.1;
+        if (this.state.time > Game.parameters.get('gooseBiteStunTime')) {
+            this.state.change(Character.State.NORMAL);
+        }
+    } else {
+        this.center.rotation.z = GJS.towardsZero(this.center.rotation.z, deltaTime);
+    }
+
     if (this.sittingOn) {
         this.setDisplayAngleFromXZ(this.sittingOn.direction.x, this.sittingOn.direction.y);
     } else if (this.carriedBy) {
@@ -244,9 +253,6 @@ PlayerCharacter.prototype.update = function(deltaTime) {
     var moveSpeed = Game.parameters.get('playerMoveSpeed') * (this.carrying === null ? 1.0 : 0.7);
     if (this.state.id === Character.State.STUNNED) {
         moveSpeed = 0.0;
-        if (this.state.time > Game.parameters.get('gooseBiteStunTime')) {
-            this.state.change(Character.State.NORMAL);
-        }
     }
     this.physicsShim.move(deltaTime, this.xMoveIntent, this.zMoveIntent, moveSpeed);
     if (this.physicsShim.dx != 0.0 || this.physicsShim.dy != 0.0) {
