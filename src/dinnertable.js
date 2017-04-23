@@ -110,7 +110,6 @@ DinnerTable.prototype.createTextMesh = function(text) {
     });
     textGeo.center();
     var textMesh = new THREE.Mesh( textGeo, this.textMaterial );
-    //textMesh.position.z = -0.025;
     return textMesh;
 };
 

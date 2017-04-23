@@ -187,7 +187,7 @@ Level.prototype.generateTileEditorObjectsFromTiles = function(tilemap) {
         // Associate chair with the nearest table
         var dinnerTableLookupPosition = new Vec2(chairX, chairZ);
         var table = null;
-        if (tableDirection.length() != 0) {
+        if (tableDirection !== undefined) {
             while (table === null) {
                 dinnerTableLookupPosition.translate(tableDirection);
                 for (var j = 0; j < this.objects.length; ++j) {
