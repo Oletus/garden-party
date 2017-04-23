@@ -50,12 +50,16 @@ var DinnerTable = function(options) {
     this.center.add(box);
     
     this.state = new GJS.StateMachine({stateSet: DinnerTable.State, id: DinnerTable.State.NO_TOPIC});
+    this.conversationTime = 0.0;
+    this.oldConversationTime = 0.0;
     this.chairs = [];
     
     this.discussionTopic = null;
     this.unfinishedTopicSitters = []; // Used to manage that simply reintroducing the same people to the same table doesn't change the topic
     
-    this.topicTextMaterial = DinnerTable.textMaterial.clone();
+    this.conversationScore = 0;
+    
+    this.topicTextMaterial = DinnerTable.topicTextMaterial.clone();
     this.textParent = new THREE.Object3D();
     this.textParent.position.y = 1.5;
     this.center.add(this.textParent);
@@ -67,6 +71,34 @@ var DinnerTable = function(options) {
     this.topicTitleTextMesh = this.createTextMesh('TOPIC:', this.topicTextMaterial);
     this.topicTitleTextMesh.position.y = 0.6;
     this.topicTextParent.add(this.topicTitleTextMesh);
+
+    {
+        this.scoreTextMaterial = DinnerTable.scoreTextMaterial.clone();
+        this.scoreTextMaterial.transparent = true;
+        this.scoreTextParent = new THREE.Object3D();
+        this.scoreTextParent.visible = false;
+        this.textParent.add(this.scoreTextParent);
+        
+        var pleasantTextMesh = this.createTextMesh('PLEASANT', this.scoreTextMaterial);
+        pleasantTextMesh.position.y = 0.6;
+        this.scoreTextParent.add(pleasantTextMesh);
+        var conversationTextMesh = this.createTextMesh('CONVERSATION!', this.scoreTextMaterial);
+        this.scoreTextParent.add(conversationTextMesh);
+    }
+    
+    {
+        this.failTextMaterial = DinnerTable.failTextMaterial.clone();
+        this.failTextMaterial.transparent = true;
+        this.failTextParent = new THREE.Object3D();
+        this.failTextParent.visible = false;
+        this.textParent.add(this.failTextParent);
+        
+        var dreadfulTextMesh = this.createTextMesh('DREADFUL', this.failTextMaterial);
+        dreadfulTextMesh.position.y = 0.6;
+        this.failTextParent.add(dreadfulTextMesh);
+        var conversationTextMesh = this.createTextMesh('CONVERSATION!', this.failTextMaterial);
+        this.failTextParent.add(conversationTextMesh);
+    }
     
     this.initThreeSceneObject({
         object: this.origin,
@@ -79,9 +111,10 @@ var DinnerTable = function(options) {
 DinnerTable.prototype = new GridSceneObject();
 
 DinnerTable.State = {
-    NO_TOPIC: 0,
-    TOPIC: 1,
-    REMOVING_TOPIC: 2
+    SCORING_TOPIC: 0,
+    NO_TOPIC: 1,
+    TOPIC: 2,
+    REMOVING_TOPIC: 3
 };
 
 DinnerTable.prototype.addLeg = function(x, z) {
@@ -102,8 +135,9 @@ DinnerTable.prototype.getColliderRect = function() {
     return new Rect(this.x, this.x + this.width, this.z, this.z + this.depth);
 };
 
-DinnerTable.textMaterial = new THREE.MeshPhongMaterial( { color: 0x333333, specular: 0x000000 } );
+DinnerTable.topicTextMaterial = new THREE.MeshPhongMaterial( { color: 0x333333, specular: 0x000000 } );
 DinnerTable.scoreTextMaterial = new THREE.MeshPhongMaterial( { color: 0x888833, specular: 0x000000, emissive: 0x444433} );
+DinnerTable.failTextMaterial = new THREE.MeshPhongMaterial( { color: 0x880000, specular: 0x000000, emissive: 0x550000 } );
 
 DinnerTable.prototype.createTextMesh = function(text, material) {
     var textGeo = new THREE.TextGeometry( text, {
@@ -123,19 +157,27 @@ DinnerTable.prototype.setTopicText = function(text) {
         this.topicTextParent.remove(this.topicTextMesh);
     }
     this.topicTextMesh = this.createTextMesh(text, this.topicTextMaterial);
-    this.textParent.rotation.y = Math.PI;
+    this.topicTextParent.rotation.y = Math.PI;
     this.topicTextParent.visible = true;
     this.topicTextParent.add(this.topicTextMesh);
 };
 
 DinnerTable.prototype.update = function(deltaTime) {
-    this.textParent.rotation.y += deltaTime * 0.5;
-    if (this.textParent.rotation.y > -Math.PI * 0.5) {
-        this.textParent.rotation.y -= Math.PI;
+    this.topicTextParent.rotation.y += deltaTime * 0.5;
+    if (this.topicTextParent.rotation.y > -Math.PI * 0.5) {
+        this.topicTextParent.rotation.y -= Math.PI;
     }
     
     this.state.update(deltaTime);
-    if (this.state.id === DinnerTable.State.NO_TOPIC) {
+    if (this.state.id === DinnerTable.State.SCORING_TOPIC) {
+        var textParent = this.getConversationScoreTextParent();
+        textParent.position.y = this.state.time;
+        textParent.children[0].material.opacity = mathUtil.clamp(0.0, 1.0, Math.min(this.state.time, 3.0 - this.state.time));
+        if (this.state.time > 3.0) {
+            this.state.change(DinnerTable.State.NO_TOPIC);
+            textParent.visible = false;
+        }
+    } else if (this.state.id === DinnerTable.State.NO_TOPIC) {
         if (this.state.time > 1.0) {
             this.trySetTopic();
         }
@@ -146,17 +188,37 @@ DinnerTable.prototype.update = function(deltaTime) {
         } else {
             this.topicTextMaterial.opacity = this.state.time;
         }
-        if (this.state.time > Game.parameters.get('maxTimePerDiscussionTopic')) {
-            this.endTopic();
+        this.conversationTime += deltaTime;
+        if (this.conversationTime > Game.parameters.get('maxTimePerDiscussionTopic')) {
             this.unfinishedTopicSitters = [];
+            var sitters = this.getSitters();
+            this.conversationScore = 1;
+            for (var i = 0; i < sitters.length; ++i) {
+                if (sitters[i].emotionalState.id === Character.EmotionalState.SAD) {
+                    this.conversationScore = -1;
+                }
+            }
+            this.endTopic();
         }
     } else if (this.state.id === DinnerTable.State.REMOVING_TOPIC) {
         this.topicTextMaterial.opacity = mathUtil.clamp(0.0, this.topicTextMaterial.opacity, 1.0 - this.state.time);
         if (this.state.time > 1.0) {
             this.topicTextParent.visible = false;
-            this.state.change(DinnerTable.State.NO_TOPIC);
+            if (this.conversationScore !== 0) {
+                this.state.change(DinnerTable.State.SCORING_TOPIC);
+                var textParent = this.getConversationScoreTextParent();
+                textParent.visible = true;
+                textParent.position.y = 0.0;
+                textParent.rotation.y = Math.PI;
+            } else {
+                this.state.change(DinnerTable.State.NO_TOPIC);
+            }
         }
     }
+};
+
+DinnerTable.prototype.getConversationScoreTextParent = function() {
+    return this.conversationScore > 0 ? this.scoreTextParent : this.failTextParent;
 };
 
 DinnerTable.prototype.getSitters = function() {
@@ -191,7 +253,9 @@ DinnerTable.prototype.trySetTopic = function() {
                 continueOldConversation = false;
             }
         }
-        if (!continueOldConversation) {
+        if (continueOldConversation) {
+            this.conversationTime = this.oldConversationTime;
+        } else {
             if (this.discussionTopic === null) {
                 this.discussionTopic = arrayUtil.randomItem(conversationData);
             } else {
@@ -201,7 +265,9 @@ DinnerTable.prototype.trySetTopic = function() {
                 }
                 this.discussionTopic = newDiscussionTopic;
             }
+            this.conversationTime = 0.0;
         }
+        this.conversationScore = 0;
         this.setTopicText(this.discussionTopic.name);
         this.topicTextMaterial.opacity = 0.0;
         this.topicTextMaterial.transparent = true;
@@ -224,6 +290,7 @@ DinnerTable.prototype.addedSitter = function(sitter) {
 DinnerTable.prototype.removedSitter = function(sitter) {
     var sitters = this.getSitters();
     if (sitters.length <= 1) {
+        this.oldConversationTime = this.state.time;
         this.endTopic();
         if (sitters.length === 1) {
             sitters[0].leftAlone();
