@@ -80,7 +80,8 @@ GJS.ThreeSceneObject.prototype.update = function(deltaTime) {
 
 
 /**
- * An object that owns a text string that's displayed as a Three.js scene object.
+ * Base type for objects that display a text string as a Three.js mesh.
+ * Use classes that inherit this class, like GJS.ThreeExtrudedTextObject to display text in the 3D scene.
  * @constructor
  */
 GJS.ThreeTextObject = function() {

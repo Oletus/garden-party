@@ -60,6 +60,8 @@ var Level = function(options) {
     this.tileEditorObjects = [];
 
     var parsedSpec = JSON.parse(this.levelSpec);
+    this.passScore = parsedSpec['passScore'];
+    this.failScore = parsedSpec['failScore'];
     this.tiledata = parsedSpec['tiledata'];
     this.generateTileEditorObjectsFromTiles(Level.tilemapFromData(this.tiledata));
     this.updateCollisionGridFromObjects();
@@ -119,11 +121,12 @@ var Level = function(options) {
     this.gardenParent.add(this.guiParent);
     
     this.score = 0;
+    this.negativeScore = 0;
     this.scoreText = new GJS.ThreeExtrudedTextObject({
         sceneParent: this.guiParent,
-        string: 'SCORE: ' + this.score,
         textAlign: 'left'
         });
+    this.addScore(0);
     this.scoreText.addToScene();
 };
 
@@ -152,6 +155,8 @@ Level.tilemapFromData = function(tiledata) {
 
 Level.prototype.getSpec = function() {
     return JSON.stringify({
+        'passScore': this.passScore,
+        'failScore': this.failScore,
         'tiledata': this.tiledata
     });
 };
@@ -359,8 +364,12 @@ Level.prototype.update = function(deltaTime) {
 };
 
 Level.prototype.addScore = function(scoreDelta) {
-    this.score += scoreDelta;
-    this.scoreText.setString('SCORE: ' + this.score);
+    if (scoreDelta > 0) {
+        this.score += scoreDelta;
+    } else if (scoreDelta < 0) {
+        this.negativeScore -= scoreDelta;
+    }
+    this.scoreText.setString('SCORE: ' + this.score + '/' + this.passScore + ' FAILURES: ' + this.negativeScore + '/' + this.failScore);
 };
 
 Level.prototype.initPostprocessing = function(renderer) {
