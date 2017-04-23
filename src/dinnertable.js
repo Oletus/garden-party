@@ -53,6 +53,7 @@ var DinnerTable = function(options) {
     this.chairs = [];
     
     this.discussionTopic = null;
+    this.lastTopicSitters = []; // Used to manage that simply reintroducing the same people to the same table doesn't change the topic
     
     this.initThreeSceneObject({
         object: this.origin,
@@ -148,28 +149,42 @@ DinnerTable.prototype.getSitters = function() {
     return sitters;
 };
 
+DinnerTable.prototype.updateLastTopicSitters = function() {
+    this.lastTopicSitters = this.getSitters().slice();
+};
+
 DinnerTable.prototype.trySetTopic = function() {
     var sitters = this.getSitters();
     if (sitters.length > 1) {
-        this.discussionTopic = arrayUtil.randomItem(conversationData);
+        var everyoneWasHereAlready = true;
+        for (var i = 0; i < sitters.length; ++i) {
+            if (this.lastTopicSitters.indexOf(sitters[i]) < 0) {
+                everyoneWasHereAlready = false;
+            }
+        }
+        if (!everyoneWasHereAlready) {
+            this.discussionTopic = arrayUtil.randomItem(conversationData);
+        }
         this.setText(this.discussionTopic.name);
         this.textMesh.material.opacity = 0.0;
         this.textMesh.material.transparent = true;
         this.state.change(DinnerTable.State.TOPIC);
-        
+
         for (var i = 0; i < sitters.length; ++i) {
             sitters[i].joinTopic(this.discussionTopic);
         }
+        this.updateLastTopicSitters();
     }
 };
 
 DinnerTable.prototype.addedSitter = function(sitter) {
     if (this.state.id === DinnerTable.State.TOPIC) {
         sitter.joinTopic(this.discussionTopic);
+        this.updateLastTopicSitters();
     }
 };
 
-DinnerTable.prototype.removedSitter = function() {
+DinnerTable.prototype.removedSitter = function(sitter) {
     var sitters = this.getSitters();
     if (sitters.length <= 1) {
         this.textMesh.material.transparent = true;

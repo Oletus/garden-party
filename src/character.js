@@ -49,6 +49,8 @@ Character.prototype.initCharacter = function(options) {
     //this.mesh = Characters[this.id].model.clone();
     this.mesh = Character.hostessModel.clone();
     this.mesh.rotation.y = Character.modelRotationOffset;
+    this.mesh.castShadow = true;
+    this.mesh.receiveShadow = true;
     this.center.add(this.mesh);
     
     this.initThreeSceneObject({
