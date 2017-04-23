@@ -79,13 +79,17 @@ Goose.prototype.startSitting = function() {
     this.nextStateChangeTime = mathUtil.random() * 4.0 + 3.0;
 };
 
-Goose.prototype.startWalking = function() {
-    var directions = this.level.collisionTileMap.getDistancesByCardinalDirection(
+Goose.prototype.getDistancesToWalls = function() {
+    return this.level.collisionTileMap.getDistancesByCardinalDirection(
         this.level.collisionTileMap.tileAt(this.x, this.z),
         function(tile) { return tile.isWall(); });
+};
+
+Goose.prototype.startWalking = function() {
+    var wallDistances = this.getDistancesToWalls();
     var candidates = [];
     for (var i = 0; i < 4; ++i) {
-        if (directions[i] >= 2) {
+        if (wallDistances[i] >= 2) {
             candidates.push(i);
         }
     }
@@ -124,17 +128,20 @@ Goose.prototype.update = function(deltaTime) {
         // See if the goose needs to start chasing the player.
         // It will chase if the player is on its line of sight, or if the player gets very close.
         var lineOfSightRect = new Rect(this.x - 0.1, this.x + 0.1, this.z - 0.1, this.z + 0.1);
-        var xOffset = Math.sin(this.center.rotation.y);
-        var zOffset = Math.cos(this.center.rotation.y);
+        var directionVec = new Vec2(Math.sin(this.center.rotation.y), Math.cos(this.center.rotation.y));
+        var chaseDirection = GJS.CardinalDirection.fromVec2(directionVec);
         var chaseDistance = Game.parameters.get('gooseLineOfSightChaseDistance');
         lineOfSightRect.unionRect(new Rect(
-            this.x + xOffset * chaseDistance - 0.1,
-            this.x + xOffset * chaseDistance + 0.1,
-            this.z + zOffset * chaseDistance - 0.1,
-            this.z + zOffset * chaseDistance + 0.1
+            this.x + directionVec.x * chaseDistance - 0.1,
+            this.x + directionVec.x * chaseDistance + 0.1,
+            this.z + directionVec.y * chaseDistance - 0.1,
+            this.z + directionVec.y * chaseDistance + 0.1
             ));
         if (this.level.playerCharacter.physicsShim.getCollisionRect().intersectsRect(lineOfSightRect)) {
-            this.startChasing(this.level.playerCharacter);
+            var wallDistances = this.getDistancesToWalls();
+            if (wallDistances[chaseDirection] > this.level.playerCharacter.center.position.distanceTo(this.center.position)) {
+                this.startChasing(this.level.playerCharacter);
+            }
         }
     }
     

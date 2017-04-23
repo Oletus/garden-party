@@ -594,6 +594,22 @@ GJS.CardinalDirection.toVec2 = function(direction) {
     }
 };
 
+GJS.CardinalDirection.fromVec2 = function(vec) {
+    if (Math.abs(vec.x) >= Math.abs(vec.y)) {
+        if (vec.x >= 0) {
+            return GJS.CardinalDirection.RIGHT;
+        } else {
+            return GJS.CardinalDirection.LEFT;
+        }
+    } else {
+        if (vec.y >= 0) {
+            return GJS.CardinalDirection.DOWN;
+        } else {
+            return GJS.CardinalDirection.UP;
+        }
+    }
+};
+
 /**
  * @constructor
  * @param {number} x Horizontal component of the vector.
