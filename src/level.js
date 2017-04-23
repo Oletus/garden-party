@@ -41,7 +41,7 @@ var Level = function(options) {
     this.scenery = Level.sceneryModel.clone();
     this.scenery.rotation.y = Math.PI;
     this.scenery.position.x = Level.gridWidth * 0.5;
-    this.scenery.position.z = Level.gridDepth * 0.5;
+    this.scenery.position.z = Level.gridDepth * 0.5 + 1;
     this.scenery.castShadow = true;
     this.scenery.receiveShadow = true;
     this.scene.add(this.scenery);
@@ -211,8 +211,13 @@ Level.prototype.updateCollisionGridFromObjects = function() {
     this.collisionTileMap = new GJS.TileMap({
         width: Level.gridWidth,
         height: Level.gridDepth,
-        initTile: function() { return new GJS.PlatformingTile(); },
-        initEdgeTile: function() {return new GJS.WallTile(); }
+        initTile: function(x, y) {
+            if ((x < 3 || x > Level.gridWidth - 4) && y == Level.gridDepth - 2) {
+                return new GJS.WallTile();
+            }
+            return new GJS.PlatformingTile();
+        },
+        initEdgeTile: function() { return new GJS.WallTile(); }
     });
     
     for (var i = 0; i < this.tileEditorObjects.length; ++i) {
@@ -291,7 +296,7 @@ Level.prototype.canvasMove = function(viewportPos) {
 };
 
 Level.gridWidth = 16;
-Level.gridDepth = 15;
+Level.gridDepth = 14;
 
 Level.State = {
     INTRO: 0,
@@ -382,7 +387,7 @@ Level.prototype.getLookAtCenter = function() {
     if (this.camera instanceof THREE.PerspectiveCamera) {
         return new THREE.Vector3(Level.gridWidth * 0.5, 0.0, Level.gridDepth * 0.42);
     } else {
-        return new THREE.Vector3(Level.gridWidth * 0.5, 0.0, Level.gridDepth * 0.5);
+        return new THREE.Vector3(Level.gridWidth * 0.5, 0.0, Level.gridDepth * 0.5 + 1);
     }
 };
 
