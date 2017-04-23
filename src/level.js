@@ -273,8 +273,8 @@ Level.prototype.canvasMove = function(viewportPos) {
     }
 };
 
-Level.gridWidth = 17;
-Level.gridDepth = 17;
+Level.gridWidth = 16;
+Level.gridDepth = 15;
 
 Level.State = {
     INTRO: 0,
