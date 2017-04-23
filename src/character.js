@@ -202,26 +202,6 @@ var Guest = function(options) {
 Guest.prototype = new Character(); 
 
 
-var PlayerPhysicsShim = function(options) {
-    this.init(options);
-};
-
-PlayerPhysicsShim.prototype = new GJS.PlatformingObject();
-
-/**
- * Get the object's collision rectangle in case the object is positioned at x, y.
- * Override this instead of getCollisionRect or getLastCollisionRect.
- * @param {number} x Horizontal position.
- * @param {number} y Vertical position.
- * @return {Rect} Collision rectangle.
- */
-PlayerPhysicsShim.prototype.getPositionedCollisionRect = function(x, y) {
-    var width = 0.5;
-    var height = 0.5;
-    return new Rect(x - width * 0.5, x + width * 0.5,
-                    y - height * 0.5, y + height * 0.5);
-};
-
 /**
  * @constructor
  */
@@ -234,7 +214,7 @@ var PlayerCharacter = function(options) {
     objectUtil.initWithDefaults(this, defaults, options);
     
     // The physics class we're using handles movement in terms of x / y. However we're using three.js x / z coordinates.
-    this.physicsShim = new PlayerPhysicsShim({x: this.x, y: this.z});
+    this.physicsShim = new CharacterPhysicsShim({x: this.x, y: this.z, level: this.level});
     
     this.interactionCursor = new InteractionCursor({
         sceneParent: this.sceneParent
@@ -246,20 +226,11 @@ PlayerCharacter.prototype = new Character();
 PlayerCharacter.prototype.update = function(deltaTime) {
     Character.prototype.update.call(this, deltaTime);
 
-    this.physicsShim.dx = mathUtil.clamp(-1.0, 1.0, this.xMoveIntent);
-    this.physicsShim.dy = mathUtil.clamp(-1.0, 1.0, this.zMoveIntent);
-    // Normalize the movement speed: Make sure that diagonal movement speed is the same as horizontal/vertical.
+    var moveSpeed = Game.parameters.get('playerMoveSpeed') * (this.carrying === null ? 1.0 : 0.5);
+    this.physicsShim.move(deltaTime, this.xMoveIntent, this.zMoveIntent, moveSpeed);
     if (this.physicsShim.dx != 0.0 || this.physicsShim.dy != 0.0) {
-        var movementMult = 1.0 / Math.sqrt(Math.pow(this.physicsShim.dx, 2) + Math.pow(this.physicsShim.dy, 2));
-        this.physicsShim.dx *= movementMult;
-        this.physicsShim.dy *= movementMult;
         this.setDisplayAngleFromXZ(this.physicsShim.dx, this.physicsShim.dy);
     }
-    var moveSpeed = Game.parameters.get('playerMoveSpeed') * (this.carrying === null ? 1.0 : 0.5);
-    this.physicsShim.dx *= moveSpeed;
-    this.physicsShim.dy *= moveSpeed;
-    GJS.PlatformingPhysics.moveAndCollide(this.physicsShim, deltaTime, 'x', [this.level.physicalCollisionTileMap]);
-    GJS.PlatformingPhysics.moveAndCollide(this.physicsShim, deltaTime, 'y', [this.level.physicalCollisionTileMap]);
 
     this.x = this.physicsShim.x;
     this.z = this.physicsShim.y;
