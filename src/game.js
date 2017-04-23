@@ -32,7 +32,7 @@ var Game = function(resizer, renderer, loadingBar) {
 };
 
 Game.prototype.loadedInit = function() {
-    this.level = new Level({game: this});
+    this.level = new Level({game: this, cameraAspect: this.resizer.width / this.resizer.height});
 };
 
 Game.prototype.render = function() {
@@ -217,12 +217,11 @@ window['start'] = function() {
         canvas: renderer.domElement,
         wrapperElement: canvasWrapper,
         width: 16,
-        height: 9,
+        height: 12,
         setCanvasSizeCallback: function(width, height) {
             renderer.setSize(width, height);
             if (game !== undefined && game.level) {
-                game.level.camera.aspect = width / height;
-                game.level.camera.updateProjectionMatrix();
+                game.level.updateCamera(width / height);
                 if (game.level.effectComposer !== null) {
                     game.level.effectComposer.setSize(width, height);
                     game.level.aaPass.setSize(width, height);

@@ -21,7 +21,10 @@ var Level = function(options) {
     
     this.setupLights();
 
-    this.camera = new THREE.PerspectiveCamera( 20, this.cameraAspect, 1, 500000 );
+    //this.camera = new THREE.PerspectiveCamera( 20, this.cameraAspect, 1, 500000 );
+    var camWidth = 17;
+    var camHeight = 17 / this.cameraAspect;
+    this.camera = new THREE.OrthographicCamera( camWidth / - 2, camWidth / 2, camHeight / 2, camHeight / - 2, 1, 1000 );
     this.raycaster = new THREE.Raycaster();
     
     this.objects = [];
@@ -108,6 +111,21 @@ var Level = function(options) {
 
     this.effectComposer = null;
 };
+
+Level.prototype.updateCamera = function(cameraAspect) {
+    this.cameraAspect = cameraAspect;
+    if (this.camera instanceof THREE.PerspectiveCamera) {
+        this.camera.aspect = cameraAspect;
+    } else {
+        var camWidth = 17;
+        var camHeight = 17 / this.cameraAspect;
+        this.camera.left = camWidth / - 2;
+        this.camera.right = camWidth / 2;
+        this.camera.top = camHeight / 2;
+        this.camera.bottom = camHeight / - 2;
+    }
+    this.camera.updateProjectionMatrix();
+}
 
 Level.tilemapFromData = function(tiledata) {
     return new GJS.TileMap({
@@ -363,7 +381,11 @@ Level.prototype.render = function(renderer) {
 };
 
 Level.prototype.getLookAtCenter = function() {
-    return new THREE.Vector3(Level.gridWidth * 0.5, 0.0, Level.gridDepth * 0.42);
+    if (this.camera instanceof THREE.PerspectiveCamera) {
+        return new THREE.Vector3(Level.gridWidth * 0.5, 0.0, Level.gridDepth * 0.42);
+    } else {
+        return new THREE.Vector3(Level.gridWidth * 0.5, 0.0, Level.gridDepth * 0.5);
+    }
 };
 
 Level.prototype.setupLights = function() {
@@ -396,6 +418,6 @@ Level.prototype.setupLights = function() {
 };
 
 Level.prototype.updateSpotLightTarget = function() {
-    var spotTarget = this.getLookAtCenter();
+    var spotTarget = new THREE.Vector3(Level.gridWidth * 0.5, 0.0, Level.gridDepth * 0.5);
     this.spotLight.target.position.set(spotTarget.x, spotTarget.y, spotTarget.z);
 };
