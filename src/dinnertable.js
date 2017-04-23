@@ -127,14 +127,6 @@ var Chair = function(options) {
     
     this.setDisplayAngleFromXZ(this.direction.x, this.direction.y);
     
-    /*var boxGeometry = new THREE.BoxGeometry(0.5, 0.7, 0.5);
-    var material = Level.chairMaterial;
-    var chairBox = new THREE.Mesh(boxGeometry, material);
-    chairBox.position.y = 0.35;
-    chairBox.castShadow = true;
-    chairBox.receiveShadow = true;
-    this.origin.add(chairBox);*/
-    
     var model = Chair.model.clone();
     model.castShadow = true;
     model.receiveShadow = true;
