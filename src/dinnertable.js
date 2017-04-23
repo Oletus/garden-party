@@ -55,14 +55,18 @@ var DinnerTable = function(options) {
     this.discussionTopic = null;
     this.unfinishedTopicSitters = []; // Used to manage that simply reintroducing the same people to the same table doesn't change the topic
     
-    this.textMaterial = DinnerTable.textMaterial.clone();
+    this.topicTextMaterial = DinnerTable.textMaterial.clone();
     this.textParent = new THREE.Object3D();
     this.textParent.position.y = 1.5;
-    this.textParent.visible = false;
-    this.discussingTextMesh = this.createTextMesh('TALK:');
-    this.discussingTextMesh.position.y = 0.6;
-    this.textParent.add(this.discussingTextMesh);
     this.center.add(this.textParent);
+
+    this.topicTextParent = new THREE.Object3D();
+    this.topicTextParent.visible = false;
+    this.textParent.add(this.topicTextParent);
+    
+    this.topicTitleTextMesh = this.createTextMesh('TOPIC:', this.topicTextMaterial);
+    this.topicTitleTextMesh.position.y = 0.6;
+    this.topicTextParent.add(this.topicTitleTextMesh);
     
     this.initThreeSceneObject({
         object: this.origin,
@@ -99,8 +103,9 @@ DinnerTable.prototype.getColliderRect = function() {
 };
 
 DinnerTable.textMaterial = new THREE.MeshPhongMaterial( { color: 0x333333, specular: 0x000000 } );
+DinnerTable.scoreTextMaterial = new THREE.MeshPhongMaterial( { color: 0x888833, specular: 0x000000, emissive: 0x444433} );
 
-DinnerTable.prototype.createTextMesh = function(text) {
+DinnerTable.prototype.createTextMesh = function(text, material) {
     var textGeo = new THREE.TextGeometry( text, {
         font: Level.font,
         size: 0.4,
@@ -109,18 +114,18 @@ DinnerTable.prototype.createTextMesh = function(text) {
         bevelEnabled: false,
     });
     textGeo.center();
-    var textMesh = new THREE.Mesh( textGeo, this.textMaterial );
+    var textMesh = new THREE.Mesh( textGeo, material );
     return textMesh;
 };
 
-DinnerTable.prototype.setText = function(text) {
-    if (this.textMesh) {
-        this.textParent.remove(this.textMesh);
+DinnerTable.prototype.setTopicText = function(text) {
+    if (this.topicTextMesh) {
+        this.topicTextParent.remove(this.topicTextMesh);
     }
-    this.textMesh = this.createTextMesh(text);
-    this.textParent.visible = true;
+    this.topicTextMesh = this.createTextMesh(text, this.topicTextMaterial);
     this.textParent.rotation.y = Math.PI;
-    this.textParent.add(this.textMesh);
+    this.topicTextParent.visible = true;
+    this.topicTextParent.add(this.topicTextMesh);
 };
 
 DinnerTable.prototype.update = function(deltaTime) {
@@ -136,19 +141,19 @@ DinnerTable.prototype.update = function(deltaTime) {
         }
     } else if (this.state.id === DinnerTable.State.TOPIC) {
         if (this.state.time > 1.0) {
-            this.textMaterial.opacity = 1.0;
-            this.textMaterial.transparent = false;
+            this.topicTextMaterial.opacity = 1.0;
+            this.topicTextMaterial.transparent = false;
         } else {
-            this.textMaterial.opacity = this.state.time;
+            this.topicTextMaterial.opacity = this.state.time;
         }
         if (this.state.time > Game.parameters.get('maxTimePerDiscussionTopic')) {
             this.endTopic();
             this.unfinishedTopicSitters = [];
         }
     } else if (this.state.id === DinnerTable.State.REMOVING_TOPIC) {
-        this.textMaterial.opacity = mathUtil.clamp(0.0, this.textMaterial.opacity, 1.0 - this.state.time);
+        this.topicTextMaterial.opacity = mathUtil.clamp(0.0, this.topicTextMaterial.opacity, 1.0 - this.state.time);
         if (this.state.time > 1.0) {
-            this.textParent.visible = false;
+            this.topicTextParent.visible = false;
             this.state.change(DinnerTable.State.NO_TOPIC);
         }
     }
@@ -170,7 +175,7 @@ DinnerTable.prototype.updateUnfinishedTopicSitters = function() {
 
 DinnerTable.prototype.endTopic = function() {
     this.state.change(DinnerTable.State.REMOVING_TOPIC);
-    this.textMaterial.transparent = true;
+    this.topicTextMaterial.transparent = true;
     var sitters = this.getSitters();
     for (var i = 0; i < sitters.length; ++i) {
         sitters[i].topicEnded();
@@ -197,9 +202,9 @@ DinnerTable.prototype.trySetTopic = function() {
                 this.discussionTopic = newDiscussionTopic;
             }
         }
-        this.setText(this.discussionTopic.name);
-        this.textMaterial.opacity = 0.0;
-        this.textMaterial.transparent = true;
+        this.setTopicText(this.discussionTopic.name);
+        this.topicTextMaterial.opacity = 0.0;
+        this.topicTextMaterial.transparent = true;
         this.state.change(DinnerTable.State.TOPIC);
 
         for (var i = 0; i < sitters.length; ++i) {
