@@ -246,7 +246,7 @@ PlayerCharacter.prototype.update = function(deltaTime) {
     }
     this.physicsShim.move(deltaTime, this.xMoveIntent, this.zMoveIntent, moveSpeed);
     if (this.physicsShim.dx != 0.0 || this.physicsShim.dy != 0.0) {
-        this.setDisplayAngleFromXZ(this.physicsShim.dx, this.physicsShim.dy);
+        this.setDisplayAngleFromXZ(this.xMoveIntent, this.zMoveIntent);
     }
 
     this.x = this.physicsShim.x;
