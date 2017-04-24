@@ -94,7 +94,7 @@ Game.prototype.loadStaticScene = function() {
     this.levelFailedText.setString('PARTY FAILED!');
     this.levelFailedText.object.position.x = -Level.gridWidth * 0.5;
     this.levelFailedText.object.position.z = -Level.gridDepth * 0.3;
-    this.levelFailedText.object.position.y = 4.0;
+    this.levelFailedText.object.position.y = 4.5;
     this.levelFailedText.object.scale.multiplyScalar(1.5);
     
     this.successTextMaterial = DinnerTable.scoreTextMaterial.clone();
@@ -106,8 +106,28 @@ Game.prototype.loadStaticScene = function() {
     this.levelSuccessText.setString('SPLENDID PARTY!');
     this.levelSuccessText.object.position.x = -Level.gridWidth * 0.5;
     this.levelSuccessText.object.position.z = -Level.gridDepth * 0.3;
-    this.levelSuccessText.object.position.y = 4.0;
+    this.levelSuccessText.object.position.y = 4.5;
     this.levelSuccessText.object.scale.multiplyScalar(1.5);
+
+    this.levelContinueText = new GJS.ThreeExtrudedTextObject({
+        sceneParent: this.guiParent,
+        textAlign: 'center',
+        material: this.successTextMaterial
+    });
+    this.levelContinueText.setString('PRESS SPACE TO CONTINUE');
+    this.levelContinueText.object.position.x = -Level.gridWidth * 0.5;
+    this.levelContinueText.object.position.z = -Level.gridDepth * 0.3;
+    this.levelContinueText.object.position.y = 3.0;
+    
+    this.levelContinueFailedText = new GJS.ThreeExtrudedTextObject({
+        sceneParent: this.guiParent,
+        textAlign: 'center',
+        material: this.failTextMaterial
+    });
+    this.levelContinueFailedText.setString('PRESS SPACE TO RETRY');
+    this.levelContinueFailedText.object.position.x = -Level.gridWidth * 0.5;
+    this.levelContinueFailedText.object.position.z = -Level.gridDepth * 0.3;
+    this.levelContinueFailedText.object.position.y = 3.0;
 };
 
 Game.prototype.setupLights = function() {
@@ -239,6 +259,8 @@ Game.prototype.loadLevel = function() {
         this.scene.remove(this.level.levelSceneParent);
         this.levelFailedText.removeFromScene();
         this.levelSuccessText.removeFromScene();
+        this.levelContinueFailedText.removeFromScene();
+        this.levelContinueText.removeFromScene();
     }
     this.level = new Level({
         game: this,

@@ -378,9 +378,11 @@ Level.prototype.addScore = function(scoreDelta) {
         if (this.negativeScore >= this.failScore) {
             this.state.change(Level.State.FAIL);
             this.game.levelFailedText.addToScene();
+            this.game.levelContinueFailedText.addToScene();
         } else if (this.score >= this.passScore) {
             this.state.change(Level.State.SUCCESS);
             this.game.levelSuccessText.addToScene();
+            this.game.levelContinueText.addToScene();
         }
     }
 };
