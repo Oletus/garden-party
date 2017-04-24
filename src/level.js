@@ -203,7 +203,9 @@ Level.prototype.generateTileEditorObjectsFromTiles = function(tilemap) {
             level: this,
             sceneParent: this.tileEditorObjectParent,
             x: obstaclePositions[i].x + 0.5,
-            z: obstaclePositions[i].y + 0.5
+            z: obstaclePositions[i].y + 0.5,
+            width: 1,
+            depth: 1
         }));
     }
     this.updateCollisionGridFromObjects();
