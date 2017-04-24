@@ -262,6 +262,16 @@ Level.prototype.updateColliderVisualizer = function() {
     }
 };
 
+Level.prototype.getTables = function() {
+    var tables = [];
+    for (var i = 0; i < this.objects.length; ++i) {
+        if (this.objects[i] instanceof DinnerTable) {
+            tables.push(this.objects[i]);
+        }
+    }
+    return tables;
+};
+
 Level.prototype.getChairs = function() {
     var chairs = [];
     for (var i = 0; i < this.objects.length; ++i) {
@@ -335,6 +345,30 @@ Level.prototype.update = function(deltaTime) {
             this.objects.splice(i, 1);
         } else {
             ++i;
+        }
+    }
+    
+    var tables = this.getTables();
+    var allTablesPleasantAndFarFromOver = true;
+    for (var i = 0; i < tables.length; ++i) {
+        if (tables[i].state.id === DinnerTable.State.TOPIC) {
+            if (tables[i].getConversationScore() < 0) {
+                allTablesPleasantAndFarFromOver = false;
+            } else if (tables[i].conversationTime > tables[i].conversationDuration - 3.5) {
+                allTablesPleasantAndFarFromOver = false;
+            }
+        } else if (tables[i].getSitters().length > 1) {
+            allTablesPleasantAndFarFromOver = false;
+        }
+    }
+    if (allTablesPleasantAndFarFromOver) {
+        // Fast forward at least one table so that the player is not bored.
+        tables = arrayUtil.shuffle(tables);
+        for (var i = 0; i < tables.length; ++i) {
+            if (tables[i].state.id === DinnerTable.State.TOPIC) {
+                tables[i].conversationTime = tables[i].conversationDuration - 3.0;
+                break;
+            }
         }
     }
 

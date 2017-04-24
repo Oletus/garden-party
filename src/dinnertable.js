@@ -154,14 +154,8 @@ DinnerTable.prototype.update = function(deltaTime) {
             this.endTopic();
         } else if (this.conversationTime > this.conversationDuration) {
             this.unfinishedTopicSitters = [];
-            var sitters = this.getSitters();
-            this.conversationScore = 1;
             this.conversationTime = 0.0;
-            for (var i = 0; i < sitters.length; ++i) {
-                if (sitters[i].emotionalState.id === Character.EmotionalState.SAD) {
-                    this.conversationScore = -1;
-                }
-            }
+            this.conversationScore = this.getConversationScore();
             this.endTopic();
         }
     } else if (this.state.id === DinnerTable.State.REMOVING_TOPIC) {
@@ -180,6 +174,16 @@ DinnerTable.prototype.update = function(deltaTime) {
             }
         }
     }
+};
+
+DinnerTable.prototype.getConversationScore = function() {
+    var sitters = this.getSitters();
+    for (var i = 0; i < sitters.length; ++i) {
+        if (sitters[i].emotionalState.id === Character.EmotionalState.SAD) {
+            return -1;
+        }
+    }
+    return 1;
 };
 
 DinnerTable.prototype.getConversationScoreText = function() {
