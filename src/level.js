@@ -124,21 +124,28 @@ var Level = function(options) {
     
     this.score = 0;
     this.negativeScore = 0;
+    
+    this.scoreTextMaterial = DinnerTable.topicTextMaterial.clone();
     this.scoreText = new GJS.ThreeExtrudedTextObject({
         sceneParent: this.guiParent,
-        textAlign: 'left'
+        textAlign: 'left',
+        material: this.scoreTextMaterial
         });
     this.scoreText.object.position.x = -Level.gridWidth;
     this.scoreText.object.position.z = 0.2;
+    this.scoreText.addToScene();
+    
+    this.failScoreTextMaterial = DinnerTable.topicTextMaterial.clone();
     this.failScoreText = new GJS.ThreeExtrudedTextObject({
         sceneParent: this.guiParent,
-        textAlign: 'left'
+        textAlign: 'left',
+        material: this.failScoreTextMaterial
         });
-    this.addScore(0);
-    this.scoreText.addToScene();
     this.failScoreText.object.position.x = -Level.gridWidth * 0.5;
     this.failScoreText.object.position.z = 0.2;
     this.failScoreText.addToScene();
+    
+    this.addScore(0);
     
     this.failTextMaterial = DinnerTable.failTextMaterial.clone();
     this.levelFailedText = new GJS.ThreeExtrudedTextObject({
@@ -403,6 +410,21 @@ Level.prototype.update = function(deltaTime) {
         this.editor.update(deltaTime);
         this.tiledata = this.editor.getTileData();
     }
+    
+    if (this.state.lifeTime < this.lastScoreTime + 3.0) {
+        var colorFade = mathUtil.clamp(0.0, 1.0, (this.state.lifeTime - this.lastScoreTime) * 0.5);
+        this.scoreTextMaterial.color.copy(DinnerTable.scoreTextMaterial.color);
+        this.scoreTextMaterial.emissive.copy(DinnerTable.scoreTextMaterial.emissive);
+        this.scoreTextMaterial.color.lerp(DinnerTable.topicTextMaterial.color, colorFade);
+        this.scoreTextMaterial.emissive.lerp(DinnerTable.topicTextMaterial.emissive, colorFade);
+    }
+    if (this.state.lifeTime < this.lastFailScoreTime + 3.0) {
+        var colorFade = mathUtil.clamp(0.0, 1.0, (this.state.lifeTime - this.lastFailScoreTime) * 0.5);
+        this.failScoreTextMaterial.color.copy(DinnerTable.failTextMaterial.color);
+        this.failScoreTextMaterial.emissive.copy(DinnerTable.failTextMaterial.emissive);
+        this.failScoreTextMaterial.color.lerp(DinnerTable.topicTextMaterial.color, colorFade);
+        this.failScoreTextMaterial.emissive.lerp(DinnerTable.topicTextMaterial.emissive, colorFade);
+    }
 };
 
 Level.prototype.addScore = function(scoreDelta) {
@@ -410,9 +432,11 @@ Level.prototype.addScore = function(scoreDelta) {
         if (scoreDelta > 0) {
             Level.victorySound.play();
             this.score += scoreDelta;
+            this.lastScoreTime = this.state.lifeTime;
         } else if (scoreDelta < 0) {
             Level.awwSound.play();
             this.negativeScore -= scoreDelta;
+            this.lastFailScoreTime = this.state.lifeTime;
         }
     }
     // TODO: Don't recreate the text models if not needed.
