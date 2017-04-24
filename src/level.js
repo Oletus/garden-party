@@ -126,8 +126,14 @@ var Level = function(options) {
         sceneParent: this.guiParent,
         textAlign: 'left'
         });
+    this.failScoreText = new GJS.ThreeExtrudedTextObject({
+        sceneParent: this.guiParent,
+        textAlign: 'left'
+        });
     this.addScore(0);
     this.scoreText.addToScene();
+    this.failScoreText.object.position.x = Level.gridWidth * 0.5;
+    this.failScoreText.addToScene();
 };
 
 Level.prototype.updateCamera = function(cameraAspect) {
@@ -378,7 +384,8 @@ Level.prototype.addScore = function(scoreDelta) {
             this.negativeScore -= scoreDelta;
         }
     }
-    this.scoreText.setString('SCORE: ' + this.score + '/' + this.passScore + ' FAILURES: ' + this.negativeScore + '/' + this.failScore);
+    this.scoreText.setString('SCORE: ' + this.score + '/' + this.passScore);
+    this.failScoreText.setString(' FAILURES: ' + this.negativeScore + '/' + this.failScore);
     if (this.state.id === Level.State.IN_PROGRESS) {
         if (this.negativeScore >= this.failScore) {
             this.state.change(Level.State.FAIL);
