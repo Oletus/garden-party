@@ -124,6 +124,7 @@ Goose.prototype.startWalking = function() {
 
 Goose.prototype.startChasing = function(chaseTarget) {
     this.state.change(Goose.State.CHASING);
+    Goose.attackSound.play();
     this.chaseTarget = chaseTarget;
     if (Math.abs(this.x - chaseTarget.x) <= Math.abs(this.z - chaseTarget.z) * 2.0 &&
         Math.abs(this.z - chaseTarget.z) <= Math.abs(this.x - chaseTarget.x) * 2.0 &&
@@ -147,6 +148,7 @@ Goose.prototype.canBite = function() {
 
 Goose.prototype.bite = function(biteTarget) {
     biteTarget.getBitten();
+    Goose.biteSound.play();
     this.state.change(Goose.State.BITING);
     this.lastBiteTime = this.state.lifeTime;
 };
@@ -245,6 +247,9 @@ Goose.prototype.closeToTarget = function() {
 Goose.prototype.setDisplayAngleFromXZ = function(x, z) {
     this.center.rotation.y = Math.atan2(x, z);
 };
+
+Goose.attackSound = new GJS.Audio('goose_attack');
+Goose.biteSound = new GJS.Audio('goose_bite');
 
 Goose.model = null;
 

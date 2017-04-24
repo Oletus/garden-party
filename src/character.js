@@ -68,6 +68,7 @@ Character.prototype.initCharacter = function(options) {
     this.reactions = {}; // Emotional state ids based on topic name
     
     this.emotionalState = new GJS.StateMachine({id: Character.EmotionalState.NEUTRAL});
+    this.cryingSoundPlayed = false;
     this.tearTimer = 0.0;
     
     this.state = new GJS.StateMachine({id: Character.State.NORMAL});
@@ -91,6 +92,7 @@ Character.prototype.update = function(deltaTime) {
     if (this.state.id === Character.State.STUNNED) {
         this.center.rotation.z = Math.sin(this.state.time * Math.PI * 2.0) * 0.1;
         if (this.state.time > Game.parameters.get('gooseBiteStunTime')) {
+            Character.stunSound.stop();
             this.state.change(Character.State.NORMAL);
         }
     } else {
@@ -105,6 +107,10 @@ Character.prototype.update = function(deltaTime) {
     }
     
     if (this.emotionalState.id === Character.EmotionalState.SAD && this.emotionalState.time > 1.0) {
+        if (!this.cryingSoundPlayed) {
+            Character.cryingSounds[mathUtil.randomInt(1)].play();
+            this.cryingSoundPlayed = true;
+        }
         this.tearTimer += deltaTime;
         if (this.tearTimer > 0.2) {
             this.level.objects.push(new Tear({
@@ -209,7 +215,10 @@ Character.prototype.joinTopic = function(topic) {
         if (mathUtil.random() > topic.controversy) {
             this.emotionalState.changeIfDifferent(Character.EmotionalState.HAPPY);
         } else {
-            this.emotionalState.changeIfDifferent(Character.EmotionalState.SAD);
+            if (this.emotionalState.id !== Character.EmotionalState.SAD) {
+                this.cryingSoundPlayed = false;
+                this.emotionalState.change(Character.EmotionalState.SAD);
+            }
         }
         this.reactions[topic.name] = this.emotionalState.id;
     }
@@ -226,6 +235,8 @@ Character.prototype.leftAlone = function() {
 
 Character.prototype.getBitten = function() {
     this.state.change(Character.State.STUNNED);
+    // TODO: Limitation: can only play for a single character at a time at the moment.
+    Character.stunSound.playSingular(true);
 };
 
 
@@ -405,6 +416,12 @@ Tear.prototype.update = function(deltaTime) {
     targetPos.addVectors(this.object.position, this.direction);
     this.object.lookAt(targetPos);
 };
+
+Character.cryingSounds = [
+    new GJS.Audio('crying_1'),
+    new GJS.Audio('crying_2')
+];
+Character.stunSound = new GJS.Audio('stun');
 
 Character.tearGeometry = new THREE.ConeGeometry(0.1, 0.2, 6);
 Character.tearGeometry.rotateX(-Math.PI * 0.5);

@@ -369,10 +369,14 @@ Level.prototype.update = function(deltaTime) {
 };
 
 Level.prototype.addScore = function(scoreDelta) {
-    if (scoreDelta > 0) {
-        this.score += scoreDelta;
-    } else if (scoreDelta < 0) {
-        this.negativeScore -= scoreDelta;
+    if (this.state.id === Level.State.IN_PROGRESS) {
+        if (scoreDelta > 0) {
+            Level.victorySound.play();
+            this.score += scoreDelta;
+        } else if (scoreDelta < 0) {
+            Level.awwSound.play();
+            this.negativeScore -= scoreDelta;
+        }
     }
     this.scoreText.setString('SCORE: ' + this.score + '/' + this.passScore + ' FAILURES: ' + this.negativeScore + '/' + this.failScore);
     if (this.state.id === Level.State.IN_PROGRESS) {
@@ -473,6 +477,9 @@ Level.prototype.updateSpotLightTarget = function() {
     var spotTarget = new THREE.Vector3(Level.gridWidth * 0.5, 0.0, Level.gridDepth * 0.5);
     this.spotLight.target.position.set(spotTarget.x, spotTarget.y, spotTarget.z);
 };
+
+Level.victorySound = new GJS.Audio('victory');
+Level.awwSound = new GJS.Audio('aww');
 
 Level.sceneryModel = null;
 
