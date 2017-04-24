@@ -94,6 +94,8 @@ Game.prototype.nextLevel = function() {
     if (this.levelIndex < levelData.levelSequence.length - 1) {
         ++this.levelIndex;
         this.loadLevel();
+    } else {
+        this.restartLevel();
     }
 };
 
