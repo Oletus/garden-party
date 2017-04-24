@@ -18,7 +18,6 @@ var Level = function(options) {
     
     this.levelSceneParent = new THREE.Object3D(); // Corner of the garden. At ground level.
     this.scene.add(this.levelSceneParent);
-
     
     this.raycaster = new THREE.Raycaster();
     
@@ -35,9 +34,6 @@ var Level = function(options) {
     this.playerCharacter = new PlayerCharacter({level: this, sceneParent: this.levelSceneParent, x: 1.5, z: 1.5});
     this.objects.push(this.playerCharacter);
     
-    var goose = new Goose({level: this, sceneParent: this.levelSceneParent, x: 3.5, z: 9.5});
-    this.objects.push(goose);
-    
     this.guests = [];
 
     // These contain all the objects that are generated from tile editor tiles, like tables and chairs.
@@ -49,10 +45,18 @@ var Level = function(options) {
     this.passScore = parsedSpec['passScore'];
     this.failScore = parsedSpec['failScore'];
     this.tiledata = parsedSpec['tiledata'];
+    this.gooseCount = parsedSpec['gooseCount'];
+
     this.generateTileEditorObjectsFromTiles(Level.tilemapFromData(this.tiledata));
-    this.updateCollisionGridFromObjects();
     
     this.reinitGuests();
+    
+    var freeTiles = this.collisionTileMap.getTileCoords(function(tile) { return !tile.isWall(); });
+    for (var i = 0; i < this.gooseCount; ++i) {
+        var freeTile = arrayUtil.randomItem(freeTiles);
+        var goose = new Goose({level: this, sceneParent: this.levelSceneParent, x: freeTile.x + 0.5, z: freeTile.y + 0.5});
+        this.objects.push(goose);
+    }
 
     this.hoverTarget = null;
 
@@ -118,6 +122,7 @@ Level.prototype.getSpec = function() {
     return JSON.stringify({
         'passScore': this.passScore,
         'failScore': this.failScore,
+        'gooseCount': this.gooseCount,
         'tiledata': this.tiledata
     });
 };
