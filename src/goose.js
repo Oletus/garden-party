@@ -34,7 +34,6 @@ var Goose = function(options) {
     this.center.position.z = this.z;
 
     this.mesh = Goose.model.clone();
-    this.mesh.rotation.y = Goose.modelRotationOffset;
     this.mesh.position.y = this.sitYOffset;
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;
@@ -231,7 +230,6 @@ Goose.prototype.setDisplayAngleFromXZ = function(x, z) {
 };
 
 Goose.model = null;
-Goose.modelRotationOffset = 0;
 
 GJS.utilTHREE.loadJSONModel('goose', function(object) {
     Goose.model = object;

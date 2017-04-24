@@ -42,11 +42,9 @@ Character.prototype.initCharacter = function(options) {
     this.tearsFromLeft = true;
     
     this.mesh = this.modelSrc.plank.clone();
-    this.mesh.rotation.y = Character.modelRotationOffset;
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;
     this.sittingMesh = this.modelSrc.sitting.clone();
-    this.sittingMesh.rotation.y = Character.modelRotationOffset;
     this.sittingMesh.castShadow = true;
     this.sittingMesh.receiveShadow = true;
     this.center.add(this.mesh);
@@ -414,22 +412,22 @@ Character.tearMaterial = new THREE.MeshPhongMaterial({ color: 0x666688, emissive
 /*Character.tearMaterial.transparent = true;
 Character.tearMaterial.opacity = 0.5;*/
 
-Character.modelRotationOffset = Math.PI;
 Character.hostessModel = {plank: null, sitting: null};
 Character.guestModels = [];
 
 Character.loadModels = function() {
     GJS.utilTHREE.loadJSONModel('hostess', function(object) {
-        object.rotateY(Math.PI);
         Character.hostessModel.plank = object;
         Character.hostessModel.sitting = object;
     });
 
     var loadOneQuest = function(i) {
         GJS.utilTHREE.loadJSONModel('guest' + (i + 1) + '_plank', function(object) {
+            object.rotateY(Math.PI);
             Character.guestModels[i].plank = object;
         });
         GJS.utilTHREE.loadJSONModel('guest' + (i + 1) + '_sitting', function(object) {
+            object.rotateY(Math.PI);
             Character.guestModels[i].sitting = object;
         });
     };
