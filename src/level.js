@@ -115,9 +115,10 @@ var Level = function(options) {
 
     this.effectComposer = null;
     
+    // TODO: The GUI shouldn't really be recreated per level.
     this.guiParent = new THREE.Object3D();
-    this.guiParent.position.x = Level.gridWidth;
-    this.guiParent.position.z = -0.2;
+    this.guiParent.position.x = 0;
+    this.guiParent.position.z = 0;
     this.guiParent.rotation.y = Math.PI;
     this.gardenParent.add(this.guiParent);
     
@@ -127,14 +128,41 @@ var Level = function(options) {
         sceneParent: this.guiParent,
         textAlign: 'left'
         });
+    this.scoreText.object.position.x = -Level.gridWidth;
+    this.scoreText.object.position.z = 0.2;
     this.failScoreText = new GJS.ThreeExtrudedTextObject({
         sceneParent: this.guiParent,
         textAlign: 'left'
         });
     this.addScore(0);
     this.scoreText.addToScene();
-    this.failScoreText.object.position.x = Level.gridWidth * 0.5;
+    this.failScoreText.object.position.x = -Level.gridWidth * 0.5;
+    this.failScoreText.object.position.z = 0.2;
     this.failScoreText.addToScene();
+    
+    this.failTextMaterial = DinnerTable.failTextMaterial.clone();
+    this.levelFailedText = new GJS.ThreeExtrudedTextObject({
+        sceneParent: this.guiParent,
+        textAlign: 'center',
+        material: this.failTextMaterial
+    });
+    this.levelFailedText.setString('PARTY FAILED!');
+    this.levelFailedText.object.position.x = -Level.gridWidth * 0.5;
+    this.levelFailedText.object.position.z = -Level.gridDepth * 0.3;
+    this.levelFailedText.object.position.y = 4.0;
+    this.levelFailedText.object.scale.multiplyScalar(1.5);
+    
+    this.successTextMaterial = DinnerTable.scoreTextMaterial.clone();
+    this.levelSuccessText = new GJS.ThreeExtrudedTextObject({
+        sceneParent: this.guiParent,
+        textAlign: 'center',
+        material: this.successTextMaterial
+    });
+    this.levelSuccessText.setString('SPLENDID PARTY!');
+    this.levelSuccessText.object.position.x = -Level.gridWidth * 0.5;
+    this.levelSuccessText.object.position.z = -Level.gridDepth * 0.3;
+    this.levelSuccessText.object.position.y = 4.0;
+    this.levelSuccessText.object.scale.multiplyScalar(1.5);
 };
 
 Level.prototype.updateCamera = function(cameraAspect) {
@@ -391,8 +419,10 @@ Level.prototype.addScore = function(scoreDelta) {
     if (this.state.id === Level.State.IN_PROGRESS) {
         if (this.negativeScore >= this.failScore) {
             this.state.change(Level.State.FAIL);
+            this.levelFailedText.addToScene();
         } else if (this.score >= this.passScore) {
             this.state.change(Level.State.SUCCESS);
+            this.levelSuccessText.addToScene();
         }
     }
 };
