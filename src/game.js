@@ -128,6 +128,30 @@ Game.prototype.loadStaticScene = function() {
     this.levelContinueFailedText.object.position.x = -Level.gridWidth * 0.5;
     this.levelContinueFailedText.object.position.z = -Level.gridDepth * 0.3;
     this.levelContinueFailedText.object.position.y = 3.0;
+    
+    
+    this.gameTitleText = new GJS.ThreeExtrudedTextObject({
+        sceneParent: this.guiParent,
+        textAlign: 'center',
+        material: DinnerTable.topicTextMaterial.clone()
+    });
+    this.gameTitleText.setString('PARTY IN BUNTINGVILLE');
+    this.gameTitleText.object.position.x = -Level.gridWidth * 0.5;
+    this.gameTitleText.object.position.z = -Level.gridDepth * 0.3;
+    this.gameTitleText.object.position.y = 4.5;
+    this.gameTitleText.object.scale.multiplyScalar(1.3);
+
+    this.gameSubTitleText = new GJS.ThreeExtrudedTextObject({
+        sceneParent: this.guiParent,
+        textAlign: 'center',
+        material: DinnerTable.topicTextMaterial.clone(),
+        maxRowLength: 50
+    });
+    this.gameSubTitleText.setString('LD38 GAME BY OLLI ETUAHO, VALTTERI HEINONEN, CHARLIE HORNSBY AND ANASTASIA DIATLOVA');
+    this.gameSubTitleText.object.position.x = -Level.gridWidth * 0.5;
+    this.gameSubTitleText.object.position.z = -Level.gridDepth * 0.3;
+    this.gameSubTitleText.object.position.y = 3.0;
+    this.gameSubTitleText.object.scale.multiplyScalar(0.5);
 };
 
 Game.prototype.setupLights = function() {
@@ -217,7 +241,7 @@ Game.prototype.updateCamera = function(cameraAspect) {
 Game.prototype.render = function() {
     if (this.level) {
         var fadeOpacity = 0.0; // Opacity of black fader over the game (implemented by fading the canvas)
-        if (this.level.state.id === Level.State.INTRO) {
+        if (this.level.state.id === Level.State.GAME_TITLE || this.level.state.id === Level.State.INTRO) {
             fadeOpacity = 1.0 - this.level.state.time;
         } else if (this.level.fadingOut) {
             fadeOpacity = this.level.state.time;
@@ -291,6 +315,9 @@ Game.prototype.update = function(deltaTime) {
         this.loadStaticScene();
         this.setupLights();
         this.loadLevel();
+        this.level.state.change(Level.State.GAME_TITLE);
+        this.gameTitleText.addToScene();
+        this.gameSubTitleText.addToScene();
         this.initializedAfterLoad = true;
     }
 };
@@ -368,9 +395,15 @@ Game.prototype.spacePress = function() {
     if (this.level) {
         if (this.level.state.id === Level.State.IN_PROGRESS) {
             this.level.playerCharacter.tryPickUpOrDrop();
-        } else if ((this.level.state.id === Level.State.FAIL || this.level.state.id === Level.State.SUCCESS) && !this.level.fadingOut && this.level.state.time > 1.0) {
-            this.level.fadingOut = true;
-            this.level.state.change(this.level.state.id);
+        } else if (this.level.state.id === Level.State.GAME_TITLE && this.level.state.time > 1.0) {
+            this.level.state.change(Level.State.IN_PROGRESS);
+            this.gameTitleText.removeFromScene();
+            this.gameSubTitleText.removeFromScene();
+        } else if (this.level.state.id === Level.State.FAIL || this.level.state.id === Level.State.SUCCESS) {
+            if (!this.level.fadingOut && this.level.state.time > 1.0) {
+                this.level.fadingOut = true;
+                this.level.state.change(this.level.state.id);
+            }
         }
     }
 };

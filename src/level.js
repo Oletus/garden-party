@@ -313,10 +313,11 @@ Level.gridWidth = 16;
 Level.gridDepth = 14;
 
 Level.State = {
-    INTRO: 0,
-    IN_PROGRESS: 1,
-    SUCCESS: 2,
-    FAIL: 3
+    GAME_TITLE: 0,
+    INTRO: 1,
+    IN_PROGRESS: 2,
+    SUCCESS: 3,
+    FAIL: 4
 };
 
 Level.dinnerTableMaterial = new THREE.MeshPhongMaterial( { color: 0x777777 } );
