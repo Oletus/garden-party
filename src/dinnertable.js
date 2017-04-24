@@ -136,6 +136,7 @@ DinnerTable.prototype.update = function(deltaTime) {
         text.object.children[0].material.opacity = mathUtil.clamp(0.0, 1.0, Math.min(this.state.time, 3.0 - this.state.time));
         if (this.state.time > 3.0) {
             this.state.change(DinnerTable.State.NO_TOPIC);
+            this.conversationScore = 0;
             text.removeFromScene();
         }
     } else if (this.state.id === DinnerTable.State.NO_TOPIC) {
@@ -154,7 +155,6 @@ DinnerTable.prototype.update = function(deltaTime) {
             this.endTopic();
         } else if (this.conversationTime > this.conversationDuration) {
             this.unfinishedTopicSitters = [];
-            this.conversationTime = 0.0;
             this.conversationScore = this.getConversationScore();
             this.endTopic();
         }
@@ -206,11 +206,13 @@ DinnerTable.prototype.updateUnfinishedTopicSitters = function() {
 
 DinnerTable.prototype.endTopic = function() {
     // The topic may still be continued at a later time.
-    this.state.change(DinnerTable.State.REMOVING_TOPIC);
-    this.topicTextMaterial.transparent = true;
-    var sitters = this.getSitters();
-    for (var i = 0; i < sitters.length; ++i) {
-        sitters[i].topicEnded();
+    if (this.state.id === DinnerTable.State.TOPIC) {
+        this.state.change(DinnerTable.State.REMOVING_TOPIC);
+        this.topicTextMaterial.transparent = true;
+        var sitters = this.getSitters();
+        for (var i = 0; i < sitters.length; ++i) {
+            sitters[i].topicEnded();
+        }
     }
 };
 
