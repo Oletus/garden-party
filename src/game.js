@@ -42,6 +42,13 @@ Game.prototype.loadLevel = function() {
 
 Game.prototype.render = function() {
     if (this.level) {
+        var fadeOpacity = 0.0; // Opacity of black fader over the game (implemented by fading the canvas)
+        if (this.level.state.id === Level.State.INTRO) {
+            fadeOpacity = 1.0 - this.level.state.time;
+        } else if (this.level.state.id === Level.State.SUCCESS || this.level.state.id === Level.State.FAIL) {
+            fadeOpacity = this.level.state.time;
+        }
+        this.resizer.canvas.style.opacity = mathUtil.clamp(0.0, 1.0, 1.0 - fadeOpacity);
         this.level.render(this.renderer);
     }
     

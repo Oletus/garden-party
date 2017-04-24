@@ -343,6 +343,11 @@ Level.depthMaterial.blending = THREE.NoBlending;
 
 Level.prototype.update = function(deltaTime) {
     this.state.update(deltaTime);
+    if (this.state.id === Level.State.INTRO) {
+        if (this.state.time > 1.0) {
+            this.state.change(Level.State.IN_PROGRESS);
+        }
+    }
 
     this.cameraControl.update(deltaTime);
     this.cameraControl.setLookAt(this.getLookAtCenter());
