@@ -50,8 +50,6 @@ var Level = function(options) {
 
     this.generateTileEditorObjectsFromTiles(Level.tilemapFromData(this.tiledata));
     
-    this.reinitGuests();
-    
     var freeTiles = this.collisionTileMap.getTileCoords(function(tile) { return !tile.isWall(); });
     for (var i = 0; i < this.gooseCount; ++i) {
         var freeTile = arrayUtil.randomItem(freeTiles);
@@ -210,6 +208,7 @@ Level.prototype.generateTileEditorObjectsFromTiles = function(tilemap) {
         }));
     }
     this.updateCollisionGridFromObjects();
+    this.reinitGuests();
 };
 
 Level.prototype.updateCollisionGridFromObjects = function() {

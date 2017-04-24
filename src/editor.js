@@ -53,11 +53,6 @@ LevelEditor.prototype.keyPress = function(key) {
     this.level.removeObjects(this.level.tileEditorObjects);
     this.level.currentConversationTopics.splice(0);
     this.level.generateTileEditorObjectsFromTiles(this.tilemap);
-
-    // Reinit guests if chairs change
-    if ((key === 'c') !== (tileWas === 'c')) {
-        this.level.reinitGuests();
-    }
 };
 
 var EditorCursor = function(options) {
