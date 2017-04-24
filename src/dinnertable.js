@@ -162,7 +162,9 @@ DinnerTable.prototype.update = function(deltaTime) {
             this.topicTextMaterial.opacity = this.state.time;
         }
         this.conversationTime += deltaTime;
-        if (this.conversationTime > Game.parameters.get('maxTimePerDiscussionTopic')) {
+        if (this.level.state.id !== Level.State.IN_PROGRESS) {
+            this.endTopic();
+        } else if (this.conversationTime > Game.parameters.get('maxTimePerDiscussionTopic')) {
             this.unfinishedTopicSitters = [];
             var sitters = this.getSitters();
             this.conversationScore = 1;
@@ -220,6 +222,9 @@ DinnerTable.prototype.endTopic = function() {
 };
 
 DinnerTable.prototype.trySetTopic = function() {
+    if (this.level.state.id !== Level.State.IN_PROGRESS) {
+        return;
+    }
     var sitters = this.getSitters();
     if (sitters.length > 1) {
         var continueOldConversation = true;

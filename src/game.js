@@ -52,7 +52,7 @@ Game.prototype.render = function() {
         var fadeOpacity = 0.0; // Opacity of black fader over the game (implemented by fading the canvas)
         if (this.level.state.id === Level.State.INTRO) {
             fadeOpacity = 1.0 - this.level.state.time;
-        } else if (this.level.state.id === Level.State.SUCCESS || this.level.state.id === Level.State.FAIL) {
+        } else if (this.level.fadingOut) {
             fadeOpacity = this.level.state.time;
         }
         this.resizer.canvas.style.opacity = mathUtil.clamp(0.0, 1.0, 1.0 - fadeOpacity);
@@ -77,10 +77,12 @@ Game.prototype.update = function(deltaTime) {
     
     if (this.level) {
         this.level.update(deltaTime);
-        if (this.level.state.id === Level.State.SUCCESS && this.level.state.time > 1.0) {
-            this.nextLevel();
-        } else if (this.level.state.id === Level.State.FAIL && this.level.state.time > 1.0) {
-            this.restartLevel();
+        if (this.level.fadingOut && this.level.state.time > 1.0) {
+            if (this.level.state.id === Level.State.SUCCESS) {
+                this.nextLevel();
+            } else if (this.level.state.id === Level.State.FAIL) {
+                this.restartLevel();
+            }
         }
     }
     
@@ -116,7 +118,7 @@ Game.prototype.editorKeyPressFunction = function(key) {
 };
 
 Game.prototype.updateMoveIntent = function() {
-    if (this.level) {
+    if (this.level && this.level.state.id === Level.State.IN_PROGRESS) {
         this.level.playerCharacter.zMoveIntent = this.zMoveIntent;
         this.level.playerCharacter.xMoveIntent = this.xMoveIntent;
     }
@@ -164,7 +166,12 @@ Game.prototype.leftRelease = function() {
 
 Game.prototype.spacePress = function() {
     if (this.level) {
-        this.level.playerCharacter.tryPickUpOrDrop();
+        if (this.level.state.id === Level.State.IN_PROGRESS) {
+            this.level.playerCharacter.tryPickUpOrDrop();
+        } else if ((this.level.state.id === Level.State.FAIL || this.level.state.id === Level.State.SUCCESS) && !this.level.fadingOut && this.level.state.time > 1.0) {
+            this.level.fadingOut = true;
+            this.level.state.change(this.level.state.id);
+        }
     }
 };
 

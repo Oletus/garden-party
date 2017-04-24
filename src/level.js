@@ -163,6 +163,8 @@ var Level = function(options) {
     this.levelSuccessText.object.position.z = -Level.gridDepth * 0.3;
     this.levelSuccessText.object.position.y = 4.0;
     this.levelSuccessText.object.scale.multiplyScalar(1.5);
+    
+    this.fadingOut = false;
 };
 
 Level.prototype.updateCamera = function(cameraAspect) {
