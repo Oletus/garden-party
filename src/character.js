@@ -283,6 +283,10 @@ PlayerCharacter.prototype = new Character();
 
 PlayerCharacter.prototype.update = function(deltaTime) {
     Character.prototype.update.call(this, deltaTime);
+    if (this.level.state.id !== Level.State.IN_PROGRESS) {
+        this.xMoveIntent = 0;
+        this.zMoveIntent = 0;
+    }
 
     var moveSpeed = Game.parameters.get('playerMoveSpeed') * (this.carrying === null ? 1.0 : 0.7);
     if (this.state.id === Character.State.STUNNED) {

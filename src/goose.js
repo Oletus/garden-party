@@ -16,8 +16,8 @@ var Goose = function(options) {
         x: this.x,
         y: this.z,
         level: this.level,
-        width: 0.85,
-        height: 0.85
+        width: 0.5,
+        height: 0.5
         });
     this.xMoveIntent = 0;
     this.zMoveIntent = 0;
