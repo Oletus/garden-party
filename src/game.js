@@ -30,7 +30,11 @@ var Game = function(resizer, renderer, loadingBar) {
         this.input.addListener(undefined, ['0'], this.devModeTakeScreenshot);
     }
     this.takeScreenshot = false;
+    
+    Game.music.playSingular(true);
 };
+
+Game.music = new GJS.Audio('garden_party_theme');
 
 Game.prototype.loadLevel = function() {
     this.level = new Level({
