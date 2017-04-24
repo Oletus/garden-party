@@ -156,6 +156,7 @@ DinnerTable.prototype.update = function(deltaTime) {
             this.unfinishedTopicSitters = [];
             var sitters = this.getSitters();
             this.conversationScore = 1;
+            this.conversationTime = 0.0;
             for (var i = 0; i < sitters.length; ++i) {
                 if (sitters[i].emotionalState.id === Character.EmotionalState.SAD) {
                     this.conversationScore = -1;
