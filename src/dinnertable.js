@@ -236,20 +236,13 @@ DinnerTable.prototype.trySetTopic = function() {
         if (continueOldConversation) {
             this.conversationTime = this.oldConversationTime;
         } else {
-            if (this.discussionTopic !== null) {
-                this.level.currentConversationTopics.splice(this.level.currentConversationTopics.indexOf(this.discussionTopic));
-            }
-            // Make sure that the topic isn't the same in multiple tables at once
+            // Make sure that the topic isn't the same in multiple tables at once, and that the same topic isn't chosen
+            // twice in a row.
             var possibleTopics = arrayUtil.filterArray(conversationData, this.level.currentConversationTopics);
-            if (this.discussionTopic === null) {
-                this.discussionTopic = arrayUtil.randomItem(possibleTopics);
-            } else {
-                var newDiscussionTopic = this.discussionTopic;
-                while (newDiscussionTopic === this.discussionTopic) {
-                    newDiscussionTopic = arrayUtil.randomItem(possibleTopics);
-                }
-                this.discussionTopic = newDiscussionTopic;
+            if (this.discussionTopic !== null) {
+                this.level.currentConversationTopics.splice(this.level.currentConversationTopics.indexOf(this.discussionTopic), 1);
             }
+            this.discussionTopic = arrayUtil.randomItem(possibleTopics);
             this.level.currentConversationTopics.push(this.discussionTopic);
             this.conversationTime = 0.0;
         }
