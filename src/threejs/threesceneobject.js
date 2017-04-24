@@ -125,7 +125,9 @@ GJS.ThreeExtrudedTextObject = function(options) {
         font: GJS.ThreeExtrudedTextObject.defaultFont,
         extrusionHeight: 0.1,
         curveSegments: 1,
-        bevelEnabled: false
+        bevelEnabled: false,
+        castShadow: false,
+        receiveShadow: false
     };
     objectUtil.initWithDefaults(this, defaults, options);
     this.initThreeTextObject(options);
@@ -166,5 +168,7 @@ GJS.ThreeExtrudedTextObject.prototype._createTextMesh = function(string) {
     textGeo.center();
     textGeo.computeBoundingBox();
     var textMesh = new THREE.Mesh( textGeo, this.material );
+    textMesh.castShadow = this.castShadow;
+    textMesh.receiveShadow = this.receiveShadow;
     return textMesh;
 };
