@@ -12,6 +12,9 @@ var Game = function(resizer, renderer, loadingBar) {
     
     this.initializedAfterLoad = false;
     this.levelIndex = 0;
+    
+    this.xMoveIntent = 0;
+    this.zMoveIntent = 0;
 
     var numPlayers = 1;
     this.input = new GJS.InputMapper(this, numPlayers);
@@ -112,52 +115,51 @@ Game.prototype.editorKeyPressFunction = function(key) {
     };
 };
 
-Game.prototype.upPress = function() {
+Game.prototype.updateMoveIntent = function() {
     if (this.level) {
-        this.level.playerCharacter.zMoveIntent += 1.0;
+        this.level.playerCharacter.zMoveIntent = this.zMoveIntent;
+        this.level.playerCharacter.xMoveIntent = this.xMoveIntent;
     }
+};
+
+Game.prototype.upPress = function() {
+    this.zMoveIntent += 1.0;
+    this.updateMoveIntent();
 };
 
 Game.prototype.downPress = function() {
-    if (this.level) {
-        this.level.playerCharacter.zMoveIntent -= 1.0;
-    }
+    this.zMoveIntent -= 1.0;
+    this.updateMoveIntent();
 };
 
 Game.prototype.upRelease = function() {
-    if (this.level) {
-        this.level.playerCharacter.zMoveIntent -= 1.0;
-    }
+    this.zMoveIntent -= 1.0;
+    this.updateMoveIntent();
 };
 
 Game.prototype.downRelease = function() {
-    if (this.level) {
-        this.level.playerCharacter.zMoveIntent += 1.0;
-    }
+    this.zMoveIntent += 1.0;
+    this.updateMoveIntent();
 };
 
 Game.prototype.rightPress = function() {
-    if (this.level) {
-        this.level.playerCharacter.xMoveIntent -= 1.0;
-    }
+    this.xMoveIntent -= 1.0;
+    this.updateMoveIntent();
 };
 
 Game.prototype.leftPress = function() {
-    if (this.level) {
-        this.level.playerCharacter.xMoveIntent += 1.0;
-    }
+    this.xMoveIntent += 1.0;
+    this.updateMoveIntent();
 };
 
 Game.prototype.rightRelease = function() {
-    if (this.level) {
-        this.level.playerCharacter.xMoveIntent += 1.0;
-    }
+    this.xMoveIntent += 1.0;
+    this.updateMoveIntent();
 };
 
 Game.prototype.leftRelease = function() {
-    if (this.level) {
-        this.level.playerCharacter.xMoveIntent -= 1.0;
-    }
+    this.xMoveIntent -= 1.0;
+    this.updateMoveIntent();
 };
 
 Game.prototype.spacePress = function() {
