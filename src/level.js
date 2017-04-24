@@ -31,7 +31,8 @@ var Level = function(options) {
     this.scenery.receiveShadow = true;
     this.scene.add(this.scenery);
 
-    this.playerCharacter = new PlayerCharacter({level: this, sceneParent: this.levelSceneParent, x: 1.5, z: 1.5});
+    this.playerCharacter = new PlayerCharacter({level: this, sceneParent: this.levelSceneParent, x: 6.0, z: Level.gridDepth - 1.5});
+    this.playerCharacter.center.rotation.y = Math.PI;
     this.objects.push(this.playerCharacter);
     
     this.guests = [];
