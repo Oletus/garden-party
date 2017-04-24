@@ -96,7 +96,7 @@ Goose.prototype.startWalking = function() {
             } else {
                 // Check that we don't walk towards / through the player in case we're not able to bite.
                 var directionVec = GJS.CardinalDirection.toVec2(i);
-                if (playerCharacterDiffVec.dotProduct(directionVec) < 0.5) {
+                if (playerCharacterDiffVec.dotProduct(directionVec) < 0.3) {
                     candidates.push(i);
                 }
             }
