@@ -39,7 +39,7 @@ var DinnerTable = function(options) {
     
     this.state = new GJS.StateMachine({stateSet: DinnerTable.State, id: DinnerTable.State.NO_TOPIC});
     this.conversationTime = 0.0;
-    this.oldConversationTime = 0.0;
+    this.conversationDuration = Game.parameters.get('maxTimePerDiscussionTopic');
     this.chairs = [];
     
     this.discussionTopic = null;
@@ -152,7 +152,7 @@ DinnerTable.prototype.update = function(deltaTime) {
         this.conversationTime += deltaTime;
         if (this.level.state.id !== Level.State.IN_PROGRESS) {
             this.endTopic();
-        } else if (this.conversationTime > Game.parameters.get('maxTimePerDiscussionTopic')) {
+        } else if (this.conversationTime > this.conversationDuration) {
             this.unfinishedTopicSitters = [];
             var sitters = this.getSitters();
             this.conversationScore = 1;
@@ -221,9 +221,7 @@ DinnerTable.prototype.trySetTopic = function() {
                 continueOldConversation = false;
             }
         }
-        if (continueOldConversation) {
-            this.conversationTime = this.oldConversationTime;
-        } else {
+        if (!continueOldConversation) {
             // Make sure that the topic isn't the same in multiple tables at once, and that the same topic isn't chosen
             // twice in a row.
             var possibleTopics = arrayUtil.filterArray(conversationData, this.level.currentConversationTopics);
@@ -233,6 +231,8 @@ DinnerTable.prototype.trySetTopic = function() {
             this.discussionTopic = arrayUtil.randomItem(possibleTopics);
             this.level.currentConversationTopics.push(this.discussionTopic);
             this.conversationTime = 0.0;
+            var range = Game.parameters.get('maxTimePerDiscussionTopic') - Game.parameters.get('minTimePerDiscussionTopic');
+            this.conversationDuration = Game.parameters.get('minTimePerDiscussionTopic') + range * mathUtil.random();
         }
         this.conversationScore = 0;
         this.setTopicText(this.discussionTopic.name);
@@ -257,7 +257,6 @@ DinnerTable.prototype.addedSitter = function(sitter) {
 DinnerTable.prototype.removedSitter = function(sitter) {
     var sitters = this.getSitters();
     if (sitters.length <= 1) {
-        this.oldConversationTime = this.state.time;
         this.endTopic();
         if (sitters.length === 1) {
             sitters[0].leftAlone();
