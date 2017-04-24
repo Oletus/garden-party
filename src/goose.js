@@ -32,13 +32,21 @@ var Goose = function(options) {
     this.center = new THREE.Object3D();
     this.center.position.x = this.x;
     this.center.position.z = this.z;
+    
+    this.meshParent = new THREE.Object3D();
+    this.meshParent.position.y = this.sitYOffset;
+    this.center.add(this.meshParent);
 
     this.mesh = Goose.model.clone();
-    this.mesh.position.y = this.sitYOffset;
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;
     
-    this.center.add(this.mesh);
+    this.attackMesh = Goose.attackModel.clone();
+    this.attackMesh.castShadow = true;
+    this.attackMesh.receiveShadow = true;
+    
+    this.meshParent.add(this.mesh);
+    
     
     this.initThreeSceneObject({
         object: this.center,
@@ -148,8 +156,10 @@ Goose.prototype.canBite = function() {
 
 Goose.prototype.bite = function(biteTarget) {
     biteTarget.getBitten();
-    Goose.biteSound.play();
     this.state.change(Goose.State.BITING);
+    Goose.biteSound.play();
+    this.meshParent.remove(this.mesh);
+    this.meshParent.add(this.attackMesh);
     this.lastBiteTime = this.state.lifeTime;
 };
 
@@ -187,7 +197,7 @@ Goose.prototype.update = function(deltaTime) {
         if (this.state.time > this.nextStateChangeTime) {
             this.randomIdleState();
         }
-        this.mesh.position.y = this.sitYOffset;
+        this.meshParent.position.y = this.sitYOffset;
     } else if (this.state.id === Goose.State.WALKING || this.state.id === Goose.State.WALKING_REALIGNING) {
         moveSpeed = Game.parameters.get('gooseWalkSpeed');
         if (!this.walkTarget) {
@@ -204,7 +214,7 @@ Goose.prototype.update = function(deltaTime) {
                 this.startWalking();
             }
         }
-        this.mesh.position.y = this.walkYOffset + (Math.sin(this.state.lifeTime * 12.0) > 0.0 ? 0.1 : 0.0);
+        this.meshParent.position.y = this.walkYOffset + (Math.sin(this.state.lifeTime * 12.0) > 0.0 ? 0.1 : 0.0);
     } else if (this.state.id === Goose.State.CHASING) {
         moveSpeed = mathUtil.mix(Game.parameters.get('gooseWalkSpeed'), Game.parameters.get('gooseChaseSpeed'), mathUtil.clamp(0.0, 1.0, this.state.time * 1.5));
         if (this.chaseTarget.center.position.distanceTo(this.center.position) < 1.0) {
@@ -216,9 +226,11 @@ Goose.prototype.update = function(deltaTime) {
             this.state.change(Goose.State.WALKING);
             this.walkTarget = undefined;
         }
-        this.mesh.position.y = this.walkYOffset + (Math.sin(this.state.lifeTime * 12.0) > 0.0 ? 0.1 : 0.0);
+        this.meshParent.position.y = this.walkYOffset + (Math.sin(this.state.lifeTime * 12.0) > 0.0 ? 0.1 : 0.0);
     } else if (this.state.id === Goose.State.BITING) {
         if (this.state.time > 0.5) {
+            this.meshParent.remove(this.attackMesh);
+            this.meshParent.add(this.mesh);
             this.startWalking();
         }
     }
@@ -252,7 +264,11 @@ Goose.attackSound = new GJS.Audio('goose_attack');
 Goose.biteSound = new GJS.Audio('goose_bite');
 
 Goose.model = null;
+Goose.attackModel = null;
 
 GJS.utilTHREE.loadJSONModel('goose', function(object) {
     Goose.model = object;
+});
+GJS.utilTHREE.loadJSONModel('goose_attack', function(object) {
+    Goose.attackModel = object;
 });

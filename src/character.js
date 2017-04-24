@@ -266,6 +266,10 @@ var PlayerCharacter = function(options) {
     this.interactionCursor = new InteractionCursor({
         sceneParent: this.sceneParent
     });
+    
+    this.carryingMesh = this.modelSrc.carrying.clone();
+    this.carryingMesh.castShadow = true;
+    this.carryingMesh.receiveShadow = true;
 };
 
 PlayerCharacter.prototype = new Character();
@@ -320,8 +324,12 @@ PlayerCharacter.prototype.tryPickUpOrDrop = function() {
     if (interactionObject !== null) {
         if (this.carrying !== null) {
             this.dropObjectOnChair(interactionObject);
+            this.center.remove(this.carryingMesh);
+            this.center.add(this.mesh);
         } else {
             this.pickUpObject(interactionObject);
+            this.center.remove(this.mesh);
+            this.center.add(this.carryingMesh);
         }
     }
 };
@@ -429,13 +437,16 @@ Character.tearMaterial = new THREE.MeshPhongMaterial({ color: 0x666688, emissive
 /*Character.tearMaterial.transparent = true;
 Character.tearMaterial.opacity = 0.5;*/
 
-Character.hostessModel = {plank: null, sitting: null};
+Character.hostessModel = {plank: null, sitting: null, carrying: null};
 Character.guestModels = [];
 
 Character.loadModels = function() {
     GJS.utilTHREE.loadJSONModel('hostess', function(object) {
         Character.hostessModel.plank = object;
         Character.hostessModel.sitting = object;
+    });
+    GJS.utilTHREE.loadJSONModel('hostess_carry', function(object) {
+        Character.hostessModel.carrying = object;
     });
 
     var loadOneQuest = function(i) {
