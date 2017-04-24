@@ -77,34 +77,43 @@ Goose.prototype.getDistancesToWalls = function() {
         function(tile) { return tile.isWall(); });
 };
 
+Goose.prototype.startRealign = function() {
+    this.state.change(Goose.State.WALKING_REALIGNING);
+    this.walkTarget = new Vec2(Math.round(this.x - 0.5) + 0.5, Math.round(this.z - 0.5) + 0.5);
+    this.xMoveIntent = this.walkTarget.x - this.x;
+    this.zMoveIntent = this.walkTarget.y - this.z;
+};
+
 Goose.prototype.startWalking = function() {
     if (!this.closeToTileCenter()) {
-        this.state.change(Goose.State.WALKING_REALIGNING);
-        this.walkTarget = new Vec2(Math.round(this.x - 0.5) + 0.5, Math.round(this.z - 0.5) + 0.5);
-        this.xMoveIntent = this.walkTarget.x - this.x;
-        this.zMoveIntent = this.walkTarget.y - this.z;
+        this.startRealign();
         return;
     }
     var wallDistances = this.getDistancesToWalls();
-    var candidates = [];
+    var goodCandidates = [];
+    var possibleCandidates = [];
     var playerCharacterDiffVec = new Vec2(this.level.playerCharacter.x - this.x, this.level.playerCharacter.z - this.z);
     playerCharacterDiffVec.normalize();
     for (var i = 0; i < 4; ++i) {
         if (wallDistances[i] >= 2) {
+            possibleCandidates.push(i);
             if (this.canBite()) {
-                candidates.push(i);
+                goodCandidates.push(i);
             } else {
                 // Check that we don't walk towards / through the player in case we're not able to bite.
                 var directionVec = GJS.CardinalDirection.toVec2(i);
                 if (playerCharacterDiffVec.dotProduct(directionVec) < 0.3) {
-                    candidates.push(i);
+                    goodCandidates.push(i);
                 }
             }
         }
     }
-    if (candidates.length > 0) {
+    if (goodCandidates.length > 0) {
+        possibleCandidates = goodCandidates;
+    }
+    if (possibleCandidates.length > 0) {
         this.state.change(Goose.State.WALKING);
-        var chosenDirection = arrayUtil.randomItem(candidates);
+        var chosenDirection = arrayUtil.randomItem(possibleCandidates);
         var moveIntent = GJS.CardinalDirection.toVec2(chosenDirection);
         var moveTiles = mathUtil.clamp(2, 5, Math.round(mathUtil.random() * wallDistances[chosenDirection] + 0.5));
         this.walkTarget = new Vec2(this.x + moveIntent.x * moveTiles, this.z + moveIntent.y * moveTiles);
@@ -179,7 +188,14 @@ Goose.prototype.update = function(deltaTime) {
         this.mesh.position.y = this.sitYOffset;
     } else if (this.state.id === Goose.State.WALKING || this.state.id === Goose.State.WALKING_REALIGNING) {
         moveSpeed = Game.parameters.get('gooseWalkSpeed');
-        if (this.closeToTarget()) {
+        if (!this.walkTarget) {
+            // This happens after chasing -> walking transition.
+            if (this.state.time > 0.3 && this.closeToTileCenter()) {
+                this.startSitting();
+            } else if (this.state.time > 1.0) {
+                this.startRealign();
+            }
+        } else if (this.closeToTarget()) {
             if (this.state.id === Goose.State.WALKING) {
                 this.randomIdleState();
             } else {
@@ -196,6 +212,7 @@ Goose.prototype.update = function(deltaTime) {
         if ((this.chaseTarget.x - this.x) * this.xMoveIntent < 0 ||
             (this.chaseTarget.z - this.z) * this.zMoveIntent < 0) {
             this.state.change(Goose.State.WALKING);
+            this.walkTarget = undefined;
         }
         this.mesh.position.y = this.walkYOffset + (Math.sin(this.state.lifeTime * 12.0) > 0.0 ? 0.1 : 0.0);
     } else if (this.state.id === Goose.State.BITING) {
@@ -218,11 +235,11 @@ Goose.prototype.update = function(deltaTime) {
 };
 
 Goose.prototype.closeToTileCenter = function() {
-    return Math.abs(this.x - 0.5 - Math.round(this.x - 0.5)) < 0.1 && Math.abs(this.z - 0.5 - Math.round(this.z - 0.5)) < 0.1;
+    return Math.abs(this.x - 0.5 - Math.round(this.x - 0.5)) < 0.05 && Math.abs(this.z - 0.5 - Math.round(this.z - 0.5)) < 0.05;
 };
 
 Goose.prototype.closeToTarget = function() {
-    return this.walkTarget.distance(new Vec2(this.x, this.z)) < 0.1;
+    return this.walkTarget.distance(new Vec2(this.x, this.z)) < 0.05;
 };
 
 Goose.prototype.setDisplayAngleFromXZ = function(x, z) {
