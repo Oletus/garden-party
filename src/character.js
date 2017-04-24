@@ -119,7 +119,7 @@ Character.prototype.update = function(deltaTime) {
         this.tearTimer += deltaTime;
         if (this.tearTimer > 0.2) {
             this.level.objects.push(new Tear({
-                sceneParent: this.level.gardenParent,
+                sceneParent: this.level.levelSceneParent,
                 origin: this.tearsFromLeft ? this.leftTearOrigin : this.rightTearOrigin
             }));
             this.tearsFromLeft = !this.tearsFromLeft;
@@ -140,7 +140,7 @@ Character.prototype.setCarriedBy = function(carriedBy) {
             this.center.position.x = 0.0;
             this.canBePickedUp = false;
         } else {
-            this.sceneParent = this.level.gardenParent;
+            this.sceneParent = this.level.levelSceneParent;
             this.center.position.y = 0.0;
             this.center.rotation.x = 0.0;
             this.center.position.x = this.x;

@@ -6,6 +6,23 @@ var Game = function(resizer, renderer, loadingBar) {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.setClearColor( 0xffffff, 1);
+    this.scene = new THREE.Scene();
+    this.effectComposer = null;
+    
+    var camWidth = 1;
+    var camHeight = 1;
+    this.camera = new THREE.OrthographicCamera( camWidth / - 2, camWidth / 2, camHeight / 2, camHeight / - 2, 30, 80 );
+    this.cameraControl = new GJS.OrbitCameraControl({
+        camera: this.camera,
+        lookAt: this.getLookAtCenter(),
+        y: 30,
+        orbitDistance: 30,
+        relativeY: false,
+        orbitAngle: Math.PI * 1.5
+    });
+    this.cameraControl.setLookAt(this.getLookAtCenter());
+    this.updateCamera(this.resizer.width / this.resizer.height);
+    
     this.loadingBar = loadingBar;
 
     this.time = 0;
@@ -39,12 +56,140 @@ var Game = function(resizer, renderer, loadingBar) {
 
 Game.music = new GJS.Audio('garden_party_theme');
 
-Game.prototype.loadLevel = function() {
-    this.level = new Level({
-        game: this,
-        cameraAspect: this.resizer.width / this.resizer.height,
-        levelSpec: levelData.data[levelData.levelSequence[this.levelIndex]]
+Game.prototype.loadStaticScene = function() {
+    this.guiParent = new THREE.Object3D();
+    this.guiParent.position.x = 0;
+    this.guiParent.position.z = 0;
+    this.guiParent.rotation.y = Math.PI;
+    this.scene.add(this.guiParent);
+    
+    this.scoreTextMaterial = DinnerTable.topicTextMaterial.clone();
+    this.scoreText = new GJS.ThreeExtrudedTextObject({
+        sceneParent: this.guiParent,
+        textAlign: 'left',
+        material: this.scoreTextMaterial
+        });
+    this.scoreText.object.position.x = -Level.gridWidth;
+    this.scoreText.object.position.z = 0.2;
+    this.scoreText.addToScene();
+    
+    this.failScoreTextMaterial = DinnerTable.topicTextMaterial.clone();
+    this.failScoreText = new GJS.ThreeExtrudedTextObject({
+        sceneParent: this.guiParent,
+        textAlign: 'left',
+        material: this.failScoreTextMaterial
+        });
+    this.failScoreText.object.position.x = -Level.gridWidth * 0.5;
+    this.failScoreText.object.position.z = 0.2;
+    this.failScoreText.addToScene();
+    
+    this.failTextMaterial = DinnerTable.failTextMaterial.clone();
+    this.levelFailedText = new GJS.ThreeExtrudedTextObject({
+        sceneParent: this.guiParent,
+        textAlign: 'center',
+        material: this.failTextMaterial
     });
+    this.levelFailedText.setString('PARTY FAILED!');
+    this.levelFailedText.object.position.x = -Level.gridWidth * 0.5;
+    this.levelFailedText.object.position.z = -Level.gridDepth * 0.3;
+    this.levelFailedText.object.position.y = 4.0;
+    this.levelFailedText.object.scale.multiplyScalar(1.5);
+    
+    this.successTextMaterial = DinnerTable.scoreTextMaterial.clone();
+    this.levelSuccessText = new GJS.ThreeExtrudedTextObject({
+        sceneParent: this.guiParent,
+        textAlign: 'center',
+        material: this.successTextMaterial
+    });
+    this.levelSuccessText.setString('SPLENDID PARTY!');
+    this.levelSuccessText.object.position.x = -Level.gridWidth * 0.5;
+    this.levelSuccessText.object.position.z = -Level.gridDepth * 0.3;
+    this.levelSuccessText.object.position.y = 4.0;
+    this.levelSuccessText.object.scale.multiplyScalar(1.5);
+};
+
+Game.prototype.setupLights = function() {
+    this.scene.add(new THREE.AmbientLight(0xC2E4FF, 1.5));
+    var mainLight = new THREE.DirectionalLight(0xffbff7, 1.0);
+    mainLight.position.set(0.5, 1, 0.6).normalize();
+    this.scene.add(mainLight);
+
+    var spotLight = new THREE.SpotLight(0xffbff7, 1, 0, Math.PI * 0.15);
+    this.spotLight = spotLight;
+    spotLight.position.set( 0.5 * 250, 250, 0.6 * 250 );
+    spotLight.target = new THREE.Object3D();
+    this.scene.add(spotLight.target);
+    this.updateSpotLightTarget();
+
+    spotLight.castShadow = true;
+    var shadowFovDegrees = 4;
+    spotLight.shadow = new THREE.LightShadow( new THREE.PerspectiveCamera( shadowFovDegrees, 1, 240, 380 ) );
+    spotLight.shadow.bias = 0.0001;
+    spotLight.shadow.mapSize.width = 1024;
+    spotLight.shadow.mapSize.height = 1024;
+    this.scene.add( spotLight );
+
+    /*var helper = new THREE.CameraHelper( spotLight.shadow.camera );
+    this.scene.add(helper);*/
+};
+
+Game.prototype.updateSpotLightTarget = function() {
+    var spotTarget = new THREE.Vector3(Level.gridWidth * 0.5, 0.0, Level.gridDepth * 0.5);
+    this.spotLight.target.position.set(spotTarget.x, spotTarget.y, spotTarget.z);
+};
+
+Game.prototype.getLookAtCenter = function() {
+    if (this.camera instanceof THREE.PerspectiveCamera) {
+        return new THREE.Vector3(Level.gridWidth * 0.5, 0.0, Level.gridDepth * 0.42);
+    } else {
+        return new THREE.Vector3(Level.gridWidth * 0.5, 0.0, Level.gridDepth * 0.5 + 1);
+    }
+};
+
+Game.prototype.initPostprocessing = function(renderer) {
+    // Setup render pass
+    var renderPass = new THREE.RenderPass( this.scene, this.camera );
+
+    var pars = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter };
+    // TODO: Should the depth render target be resized on canvas resize?
+    this.depthRenderTarget = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, pars );
+    this.depthRenderTarget.texture.name = "SSAOShader.rt";
+    
+    this.aaPass = new THREE.SMAAPass( window.innerWidth, window.innerHeight );
+
+    // Setup SSAO pass
+    this.ssaoPass = new THREE.ShaderPass( THREE.SSAOShader );
+    //this.ssaoPass.uniforms[ "tDiffuse" ].value will be set by ShaderPass
+    this.ssaoPass.uniforms[ "tDepth" ].value = this.depthRenderTarget.texture;
+    this.ssaoPass.uniforms[ 'size' ].value.set( window.innerWidth, window.innerHeight );
+    this.ssaoPass.uniforms[ 'cameraNear' ].value = this.camera.near;
+    this.ssaoPass.uniforms[ 'cameraFar' ].value = this.camera.far;
+    this.ssaoPass.uniforms[ 'onlyAO' ].value = false;
+    this.ssaoPass.uniforms[ 'aoClamp' ].value = 0.3;
+    this.ssaoPass.uniforms[ 'lumInfluence' ].value = 0.5;
+
+    // Add pass to effect composer
+    this.effectComposer = new THREE.EffectComposer( renderer );
+    this.effectComposer.addPass( renderPass );
+    this.effectComposer.addPass( this.ssaoPass );
+    this.ssaoPass.renderToScreen = false;
+    this.effectComposer.addPass( this.aaPass );
+    this.aaPass.renderToScreen = true;
+};
+
+Game.prototype.updateCamera = function(cameraAspect) {
+    this.cameraAspect = cameraAspect;
+    if (this.camera instanceof THREE.PerspectiveCamera) {
+        this.camera.aspect = this.cameraAspect;
+    } else {
+        var camWidth = 17;
+        var camHeight = 17 / this.cameraAspect;
+        this.camera.left = camWidth / - 2;
+        this.camera.right = camWidth / 2;
+        this.camera.top = camHeight / 2;
+        this.camera.bottom = camHeight / - 2;
+    }
+    this.camera.updateProjectionMatrix();
 };
 
 Game.prototype.render = function() {
@@ -56,7 +201,23 @@ Game.prototype.render = function() {
             fadeOpacity = this.level.state.time;
         }
         this.resizer.canvas.style.opacity = mathUtil.clamp(0.0, 1.0, 1.0 - fadeOpacity);
-        this.level.render(this.renderer);
+        
+        this.spotLight.castShadow = Game.parameters.get('shadowsEnabled');
+        this.level.render();
+        if (Game.parameters.get('postProcessingEnabled')) {
+            if (this.effectComposer === null) {
+                this.initPostprocessing(this.renderer);
+            }
+            // Render depth into depthRenderTarget
+            this.scene.overrideMaterial = Level.depthMaterial;
+            this.renderer.render( this.scene, this.camera, this.depthRenderTarget, true );
+
+            // Render renderPass and SSAO shaderPass
+            this.scene.overrideMaterial = null;
+            this.effectComposer.render();
+        } else {
+            this.renderer.render(this.scene, this.camera);
+        }
     }
     
     var that = this;
@@ -69,6 +230,19 @@ Game.prototype.render = function() {
     }
     
     return this.renderer;
+};
+
+Game.prototype.loadLevel = function() {
+    if (this.level) {
+        this.scene.remove(this.level.levelSceneParent);
+        this.levelFailedText.removeFromScene();
+        this.levelSuccessText.removeFromScene();
+    }
+    this.level = new Level({
+        game: this,
+        levelSpec: levelData.data[levelData.levelSequence[this.levelIndex]],
+        scene: this.scene
+    });
 };
 
 Game.prototype.update = function(deltaTime) {
@@ -90,6 +264,8 @@ Game.prototype.update = function(deltaTime) {
 
     // Call initialization function after all model assets have been loaded.
     if (this.loadingBar.finished() && !this.initializedAfterLoad) {
+        this.loadStaticScene();
+        this.setupLights();
         this.loadLevel();
         this.initializedAfterLoad = true;
     }
@@ -272,12 +448,12 @@ window['start'] = function() {
         setCanvasSizeCallback: function(width, height) {
             renderer.setSize(width, height);
             if (game !== undefined && game.level) {
-                game.level.updateCamera(width / height);
-                if (game.level.effectComposer !== null) {
-                    game.level.effectComposer.setSize(width, height);
-                    game.level.aaPass.setSize(width, height);
-                    game.level.depthRenderTarget.setSize(width, height);
-                    game.level.ssaoPass.uniforms[ 'size' ].value.set(width, height);
+                game.updateCamera(width / height);
+                if (game.effectComposer !== null) {
+                    game.effectComposer.setSize(width, height);
+                    game.aaPass.setSize(width, height);
+                    game.depthRenderTarget.setSize(width, height);
+                    game.ssaoPass.uniforms[ 'size' ].value.set(width, height);
                 }
             }
         }
