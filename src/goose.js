@@ -163,6 +163,24 @@ Goose.prototype.bite = function(biteTarget) {
     this.lastBiteTime = this.state.lifeTime;
 };
 
+Goose.prototype.chaseIfPlayerInDirection = function(chaseDirection, maxChaseDistance) {
+    var lineOfSightRect = new Rect(this.x - 0.1, this.x + 0.1, this.z - 0.1, this.z + 0.1);
+    var directionVec = GJS.CardinalDirection.toVec2(chaseDirection);
+    lineOfSightRect.unionRect(new Rect(
+        this.x + directionVec.x * maxChaseDistance - 0.1,
+        this.x + directionVec.x * maxChaseDistance + 0.1,
+        this.z + directionVec.y * maxChaseDistance - 0.1,
+        this.z + directionVec.y * maxChaseDistance + 0.1
+        ));
+    if (this.level.playerCharacter.physicsShim.getCollisionRect().intersectsRect(lineOfSightRect)) {
+        var wallDistances = this.getDistancesToWalls();
+        var distanceToPlayer = this.level.playerCharacter.center.position.distanceTo(this.center.position);
+        if (wallDistances[chaseDirection] > distanceToPlayer) {
+            this.startChasing(this.level.playerCharacter);
+        }
+    }
+}
+
 Goose.prototype.update = function(deltaTime) {
     this.state.update(deltaTime);
     var moveSpeed = 0.0;
@@ -174,21 +192,12 @@ Goose.prototype.update = function(deltaTime) {
         if (distanceToPlayer < 1.5) {
             this.startChasing(this.level.playerCharacter);
         } else {
-            var lineOfSightRect = new Rect(this.x - 0.1, this.x + 0.1, this.z - 0.1, this.z + 0.1);
             var directionVec = new Vec2(Math.sin(this.center.rotation.y), Math.cos(this.center.rotation.y));
             var chaseDirection = GJS.CardinalDirection.fromVec2(directionVec);
-            var chaseDistance = Game.parameters.get('gooseLineOfSightChaseDistance');
-            lineOfSightRect.unionRect(new Rect(
-                this.x + directionVec.x * chaseDistance - 0.1,
-                this.x + directionVec.x * chaseDistance + 0.1,
-                this.z + directionVec.y * chaseDistance - 0.1,
-                this.z + directionVec.y * chaseDistance + 0.1
-                ));
-            if (this.level.playerCharacter.physicsShim.getCollisionRect().intersectsRect(lineOfSightRect)) {
-                var wallDistances = this.getDistancesToWalls();
-                if (wallDistances[chaseDirection] > distanceToPlayer) {
-                    this.startChasing(this.level.playerCharacter);
-                }
+            this.chaseIfPlayerInDirection(chaseDirection, Game.parameters.get('gooseLineOfSightChaseDistance'));
+            if (this.state.id === Goose.State.SITTING) {
+                this.chaseIfPlayerInDirection(GJS.CardinalDirection.next(chaseDirection), Game.parameters.get('gooseSideChaseDistance'));
+                this.chaseIfPlayerInDirection(GJS.CardinalDirection.previous(chaseDirection), Game.parameters.get('gooseSideChaseDistance'));
             }
         }
     }

@@ -575,6 +575,18 @@ GJS.CardinalDirection = {
     UP: 3
 };
 
+GJS.CardinalDirection.next = function(direction) {
+    return (direction + 1) % 4;
+};
+
+GJS.CardinalDirection.previous = function(direction) {
+    if (direction === 0) {
+        return 3;
+    } else {
+        return direction - 1;
+    }
+};
+
 /**
  * @param {GJS.CardinalDirection} direction
  * @return {Vec2}
