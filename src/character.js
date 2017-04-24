@@ -49,6 +49,9 @@ Character.prototype.initCharacter = function(options) {
     this.sittingMesh.receiveShadow = true;
     this.center.add(this.mesh);
     
+    this.stunStarsMesh = Character.stunStarsModel.clone();
+    this.stunStarsMesh.position.y = 2.0;
+    
     this.initThreeSceneObject({
         object: this.center,
         sceneParent: options.sceneParent
@@ -91,8 +94,10 @@ Character.prototype.update = function(deltaTime) {
     this.emotionalState.update(deltaTime);
     if (this.state.id === Character.State.STUNNED) {
         this.center.rotation.z = Math.sin(this.state.time * Math.PI * 2.0) * 0.1;
+        this.stunStarsMesh.rotation.y = this.state.time * 5.0;
         if (this.state.time > Game.parameters.get('gooseBiteStunTime')) {
             Character.stunSound.stop();
+            this.center.remove(this.stunStarsMesh);
             this.state.change(Character.State.NORMAL);
         }
     } else {
@@ -235,7 +240,9 @@ Character.prototype.leftAlone = function() {
 
 Character.prototype.getBitten = function() {
     this.state.change(Character.State.STUNNED);
-    // TODO: Limitation: can only play for a single character at a time at the moment.
+    this.center.add(this.stunStarsMesh);
+
+    // TODO: Limitation: sound can only play for a single character at a time at the moment.
     Character.stunSound.playSingular(true);
 };
 
@@ -439,6 +446,7 @@ Character.tearMaterial.opacity = 0.5;*/
 
 Character.hostessModel = {plank: null, sitting: null, carrying: null};
 Character.guestModels = [];
+Character.stunStarsModel = null;
 
 Character.loadModels = function() {
     GJS.utilTHREE.loadJSONModel('hostess', function(object) {
@@ -447,6 +455,10 @@ Character.loadModels = function() {
     });
     GJS.utilTHREE.loadJSONModel('hostess_carry', function(object) {
         Character.hostessModel.carrying = object;
+    });
+    
+    GJS.utilTHREE.loadJSONModel('stun_stars', function(object) {
+        Character.stunStarsModel = object;
     });
 
     var loadOneQuest = function(i) {
