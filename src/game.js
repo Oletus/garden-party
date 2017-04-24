@@ -49,6 +49,7 @@ var Game = function(resizer, renderer, loadingBar) {
         this.input.addListener(undefined, ['backspace'], this.editorKeyPressFunction(' '));
         this.input.addListener(undefined, ['ctrl+s'], this.editorKeyPressFunction('ctrl+s'));
         this.input.addListener(undefined, ['0'], this.devModeTakeScreenshot);
+        this.input.addListener(undefined, ['n'], this.nextLevel);
     }
     this.takeScreenshot = false;
     

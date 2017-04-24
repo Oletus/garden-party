@@ -51,6 +51,7 @@ LevelEditor.prototype.keyPress = function(key) {
     var tileWas = this.tilemap.tiles[this.editorCursor.gridZ][this.editorCursor.gridX];
     this.tilemap.tiles[this.editorCursor.gridZ][this.editorCursor.gridX] = key;
     this.level.removeObjects(this.level.tileEditorObjects);
+    this.level.currentConversationTopics.splice(0);
     this.level.generateTileEditorObjectsFromTiles(this.tilemap);
 
     // Reinit guests if chairs change
