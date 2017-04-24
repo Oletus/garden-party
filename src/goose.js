@@ -166,7 +166,7 @@ Goose.prototype.bite = function(biteTarget) {
 Goose.prototype.update = function(deltaTime) {
     this.state.update(deltaTime);
     var moveSpeed = 0.0;
-    if (this.state.id !== Goose.State.CHASING && this.canBite()) {
+    if (this.state.id !== Goose.State.CHASING && this.state.id !== Goose.State.WALKING_REALIGNING && this.canBite()) {
         // See if the goose needs to start chasing the player.
         // It will chase if the player is on its line of sight, or if the player gets very close.
         var distanceToPlayer = this.level.playerCharacter.center.position.distanceTo(this.center.position);
