@@ -27,12 +27,12 @@ Character.prototype.initCharacter = function(options) {
     this.center = new THREE.Object3D();
     
     this.leftTearOrigin = new THREE.Object3D();
-    this.leftTearOrigin.position.y = 1.5;
+    this.leftTearOrigin.position.y = 1.7;
     this.leftTearOrigin.position.z = 0.25;
     this.leftTearOrigin.position.x = 0.1;
     this.leftTearOrigin.rotation.y = Math.PI * 0.5;
     this.rightTearOrigin = new THREE.Object3D();
-    this.rightTearOrigin.position.y = 1.5;
+    this.rightTearOrigin.position.y = 1.7;
     this.rightTearOrigin.position.z = 0.25;
     this.rightTearOrigin.position.x = -0.1;
     this.rightTearOrigin.rotation.y = -Math.PI * 0.5;
