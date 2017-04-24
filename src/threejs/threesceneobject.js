@@ -116,6 +116,7 @@ GJS.ThreeTextObject.prototype.setString = function(string) {
 
 /**
  * An object that displays a text string as an extruded Three.js mesh.
+ * To use this, first set GJS.ThreeExtrudedTextObject.defaultFont. You can use GJS.utilTHREE.loadFont to load the font.
  * @constructor
  */
 GJS.ThreeExtrudedTextObject = function(options) {

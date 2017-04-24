@@ -9,7 +9,6 @@ var Game = function(resizer, renderer, loadingBar) {
     this.loadingBar = loadingBar;
 
     this.time = 0;
-    mathUtil.seedrandom();
     
     this.initializedAfterLoad = false;
     this.levelIndex = 0;
@@ -224,6 +223,8 @@ var DEV_MODE = querystringUtil.get('devMode') !== undefined;
 window['start'] = function() {
     var DEBUG_MAIN_LOOP = DEV_MODE && true; // Set to true to allow fast-forwarding main loop with 'f'
     Game.parameters.set('muteAudio', (DEV_MODE && true)); // Set to true if sounds annoy developers
+    
+    mathUtil.seedrandom();
     
     var game;
     
