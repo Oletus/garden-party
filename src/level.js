@@ -14,6 +14,7 @@ var Level = function(options) {
     objectUtil.initWithDefaults(this, defaults, options);
     
     this.state = new GJS.StateMachine({stateSet: Level.State, id: Level.State.INTRO});
+    this.currentConversationTopics = [];
     
     this.scene = new THREE.Scene();
     this.gardenParent = new THREE.Object3D(); // Corner of the garden. At ground level.
@@ -384,6 +385,7 @@ Level.prototype.addScore = function(scoreDelta) {
             this.negativeScore -= scoreDelta;
         }
     }
+    // TODO: Don't recreate the text models if not needed.
     this.scoreText.setString('SCORE: ' + this.score + '/' + this.passScore);
     this.failScoreText.setString(' FAILURES: ' + this.negativeScore + '/' + this.failScore);
     if (this.state.id === Level.State.IN_PROGRESS) {

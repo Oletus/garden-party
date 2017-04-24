@@ -210,6 +210,7 @@ DinnerTable.prototype.updateUnfinishedTopicSitters = function() {
 };
 
 DinnerTable.prototype.endTopic = function() {
+    // The topic may still be continued at a later time.
     this.state.change(DinnerTable.State.REMOVING_TOPIC);
     this.topicTextMaterial.transparent = true;
     var sitters = this.getSitters();
@@ -230,15 +231,21 @@ DinnerTable.prototype.trySetTopic = function() {
         if (continueOldConversation) {
             this.conversationTime = this.oldConversationTime;
         } else {
+            if (this.discussionTopic !== null) {
+                this.level.currentConversationTopics.splice(this.level.currentConversationTopics.indexOf(this.discussionTopic));
+            }
+            // Make sure that the topic isn't the same in multiple tables at once
+            var possibleTopics = arrayUtil.filterArray(conversationData, this.level.currentConversationTopics);
             if (this.discussionTopic === null) {
-                this.discussionTopic = arrayUtil.randomItem(conversationData);
+                this.discussionTopic = arrayUtil.randomItem(possibleTopics);
             } else {
                 var newDiscussionTopic = this.discussionTopic;
                 while (newDiscussionTopic === this.discussionTopic) {
-                    newDiscussionTopic = arrayUtil.randomItem(conversationData);
+                    newDiscussionTopic = arrayUtil.randomItem(possibleTopics);
                 }
                 this.discussionTopic = newDiscussionTopic;
             }
+            this.level.currentConversationTopics.push(this.discussionTopic);
             this.conversationTime = 0.0;
         }
         this.conversationScore = 0;
