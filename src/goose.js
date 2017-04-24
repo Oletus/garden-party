@@ -24,24 +24,16 @@ var Goose = function(options) {
     
     this.state = new GJS.StateMachine({id: Goose.State.SITTING});
     this.lastBiteTime = -10.0;
-    this.sitYOffset = 0.1;
-    this.walkYOffset = 0.6;
+    this.sitYOffset = -0.2;
+    this.walkYOffset = 0.1;
     this.startSitting();
     
     // The center is at the feet of the character.
     this.center = new THREE.Object3D();
     this.center.position.x = this.x;
     this.center.position.z = this.z;
-    
-    // TODO: Add a proper goose model
-    var gooseGeometry = new THREE.BoxGeometry(0.9, 0.5, 0.5);
-    this.mesh = new THREE.Mesh(gooseGeometry, Level.dinnerTableMaterial);
-    var neckGeometry = new THREE.BoxGeometry(0.15, 0.5, 0.15);
-    this.neck = new THREE.Mesh(neckGeometry, Level.dinnerTableMaterial);
-    this.neck.position.y = 0.5;
-    this.neck.position.x = 0.4;
-    this.mesh.add(this.neck);
 
+    this.mesh = Goose.model.clone();
     this.mesh.rotation.y = Goose.modelRotationOffset;
     this.mesh.position.y = this.sitYOffset;
     this.mesh.castShadow = true;
@@ -234,8 +226,13 @@ Goose.prototype.closeToTarget = function() {
     return this.walkTarget.distance(new Vec2(this.x, this.z)) < 0.1;
 };
 
-Goose.modelRotationOffset = -Math.PI * 0.5;
-
 Goose.prototype.setDisplayAngleFromXZ = function(x, z) {
     this.center.rotation.y = Math.atan2(x, z);
 };
+
+Goose.model = null;
+Goose.modelRotationOffset = 0;
+
+GJS.utilTHREE.loadJSONModel('goose', function(object) {
+    Goose.model = object;
+});

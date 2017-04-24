@@ -16,20 +16,15 @@ Character.prototype.initCharacter = function(options) {
         sittingOn: null,
         carriedBy: null,
         carrying: null,
-        canBePickedUp: true
+        canBePickedUp: true,
+        modelSrc: Character.guestModels[mathUtil.randomInt(5)]
     };
     objectUtil.initWithDefaults(this, defaults, options);
-
-    if (this.sittingOn !== null) {
-        this.sitOn(this.sittingOn);
-    }
     
     this.size = 0.5;
     
     // The center is at the feet of the character.
     this.center = new THREE.Object3D();
-    this.center.position.x = this.x;
-    this.center.position.z = this.z;
     
     this.leftTearOrigin = new THREE.Object3D();
     this.leftTearOrigin.position.y = 1.5;
@@ -46,11 +41,14 @@ Character.prototype.initCharacter = function(options) {
     
     this.tearsFromLeft = true;
     
-    //this.mesh = Characters[this.id].model.clone();
-    this.mesh = Character.hostessModel.clone();
+    this.mesh = this.modelSrc.plank.clone();
     this.mesh.rotation.y = Character.modelRotationOffset;
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;
+    this.sittingMesh = this.modelSrc.sitting.clone();
+    this.sittingMesh.rotation.y = Character.modelRotationOffset;
+    this.sittingMesh.castShadow = true;
+    this.sittingMesh.receiveShadow = true;
     this.center.add(this.mesh);
     
     this.initThreeSceneObject({
@@ -59,6 +57,13 @@ Character.prototype.initCharacter = function(options) {
     });
     
     this.addToScene();
+    
+    if (this.sittingOn !== null) {
+        this.sitOn(this.sittingOn);
+    }
+    
+    this.center.position.x = this.x;
+    this.center.position.z = this.z;
     
     this.lastTopic = null;
     this.topic = null;
@@ -138,13 +143,22 @@ Character.prototype.setCarriedBy = function(carriedBy) {
     }
 };
 
+Character.prototype.getUpFromSeat = function() {
+    this.sittingOn.setSitter(null);
+    this.sittingOn = null;
+    this.center.remove(this.sittingMesh);
+    this.center.add(this.mesh);
+};
+
 Character.prototype.sitOn = function(chair) {
     if (this.sittingOn !== null) {
-        this.sittingOn.setSitter(null);
+        this.getUpFromSeat();
     }
+    this.center.remove(this.mesh);
     this.x = chair.x;
     this.z = chair.z;
     this.sittingOn = chair;
+    this.center.add(this.sittingMesh);
     chair.setSitter(this);
 };
 
@@ -177,8 +191,7 @@ Character.prototype.pickUpObject = function(object) {
     object.setCarriedBy(this);
     this.carrying = object;
     if (object.sittingOn) {
-        object.sittingOn.setSitter(null);
-        object.sittingOn = null;
+        object.getUpFromSeat();
     }
     if (object.emotionalState) {
         object.emotionalState.change(Character.EmotionalState.NEUTRAL);
@@ -230,6 +243,7 @@ Guest.prototype = new Character();
  * @constructor
  */
 var PlayerCharacter = function(options) {
+    options.modelSrc = Character.hostessModel;
     this.initCharacter(options);
     var defaults = {
         xMoveIntent: 0,
@@ -400,9 +414,29 @@ Character.tearMaterial = new THREE.MeshPhongMaterial({ color: 0x666688, emissive
 /*Character.tearMaterial.transparent = true;
 Character.tearMaterial.opacity = 0.5;*/
 
-Character.modelRotationOffset = 0;
-Character.hostessModel = null;
+Character.modelRotationOffset = Math.PI;
+Character.hostessModel = {plank: null, sitting: null};
+Character.guestModels = [];
 
-GJS.utilTHREE.loadJSONModel('hostess', function(object) {
-    Character.hostessModel = object;
-});
+Character.loadModels = function() {
+    GJS.utilTHREE.loadJSONModel('hostess', function(object) {
+        object.rotateY(Math.PI);
+        Character.hostessModel.plank = object;
+        Character.hostessModel.sitting = object;
+    });
+
+    var loadOneQuest = function(i) {
+        GJS.utilTHREE.loadJSONModel('guest' + (i + 1) + '_plank', function(object) {
+            Character.guestModels[i].plank = object;
+        });
+        GJS.utilTHREE.loadJSONModel('guest' + (i + 1) + '_sitting', function(object) {
+            Character.guestModels[i].sitting = object;
+        });
+    };
+    for (var i = 0; i < 6; ++i) {
+        Character.guestModels.push({plank: null, sitting: null});
+        loadOneQuest(i);
+    }
+};
+
+Character.loadModels();
