@@ -3,18 +3,6 @@
 /**
  * @constructor
  */
-var GridSceneObject = function() {
-};
-
-GridSceneObject.prototype = new GJS.ThreeSceneObject();
-
-GridSceneObject.prototype.getColliderRect = function() {
-    return null;
-};
-
-/**
- * @constructor
- */
 var DinnerTable = function(options) {
     var defaults = {
         level: null,

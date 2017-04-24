@@ -152,6 +152,7 @@ Level.prototype.removeObjects = function(objectsToRemove) {
 Level.prototype.generateTileEditorObjectsFromTiles = function(tilemap) {
     var isTable = function(tile) { return tile == 't'; };
     var isChair = function(tile) { return tile == 'c'; };
+    var isBush = function(tile) { return tile == 'b'; };
     var tableRects = tilemap.groupTilesToRectangles(isTable);
     for (var i = 0; i < tableRects.length; ++i) {
         this.addTileEditorObject(new DinnerTable({
@@ -194,7 +195,16 @@ Level.prototype.generateTileEditorObjectsFromTiles = function(tilemap) {
             z: chairZ,
             direction: tableDirection,
             table: table
-            }));
+        }));
+    }
+    var obstaclePositions = tilemap.getTileCoords(isBush);
+    for (var i = 0; i < obstaclePositions.length; ++i) {
+        this.addTileEditorObject(new Obstacle({
+            level: this,
+            sceneParent: this.tileEditorObjectParent,
+            x: obstaclePositions[i].x + 0.5,
+            z: obstaclePositions[i].y + 0.5
+        }));
     }
     this.updateCollisionGridFromObjects();
 };
