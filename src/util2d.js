@@ -575,10 +575,18 @@ GJS.CardinalDirection = {
     UP: 3
 };
 
+/**
+ * @param {GJS.CardinalDirection} direction
+ * @return {GJS.CardinalDirection} next adjacent direction
+ */
 GJS.CardinalDirection.next = function(direction) {
     return (direction + 1) % 4;
 };
 
+/**
+ * @param {GJS.CardinalDirection} direction
+ * @return {GJS.CardinalDirection} previous adjacent direction
+ */
 GJS.CardinalDirection.previous = function(direction) {
     if (direction === 0) {
         return 3;
@@ -606,6 +614,10 @@ GJS.CardinalDirection.toVec2 = function(direction) {
     }
 };
 
+/**
+ * @param {Vec2} vec
+ * @return {GJS.CardinalDirection}
+ */
 GJS.CardinalDirection.fromVec2 = function(vec) {
     if (Math.abs(vec.x) >= Math.abs(vec.y)) {
         if (vec.x >= 0) {
