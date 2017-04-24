@@ -123,7 +123,7 @@ Goose.prototype.startWalking = function() {
         this.state.change(Goose.State.WALKING);
         var chosenDirection = arrayUtil.randomItem(possibleCandidates);
         var moveIntent = GJS.CardinalDirection.toVec2(chosenDirection);
-        var moveTiles = mathUtil.clamp(2, 5, Math.round(mathUtil.random() * wallDistances[chosenDirection] + 0.5));
+        var moveTiles = mathUtil.clamp(1, wallDistances[chosenDirection] - 1, Math.round(mathUtil.random() * 5 + 0.5));
         this.walkTarget = new Vec2(this.x + moveIntent.x * moveTiles, this.z + moveIntent.y * moveTiles);
         this.xMoveIntent = moveIntent.x;
         this.zMoveIntent = moveIntent.y;
