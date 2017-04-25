@@ -298,9 +298,10 @@ Level.prototype.reinitGuests = function() {
     }
 };
 
-Level.prototype.canvasMove = function(viewportPos) {
+Level.prototype.canvasMove = function(event) {
     if (DEV_MODE) {
-        this.raycaster.setFromCamera(viewportPos, this.game.camera);
+        var positionAsVec3 = new THREE.Vector3(event.currentPosition.x, event.currentPosition.y, 0);
+        this.raycaster.setFromCamera(positionAsVec3, this.game.camera);
         var intersects = this.raycaster.intersectObject(this.gridVisualizer, true);
 
         if (intersects.length > 0) {

@@ -430,15 +430,8 @@ Game.prototype.canvasRelease = function(event) {
  */
 Game.prototype.canvasMove = function(event) {
     if (this.level) {
-        this.level.canvasMove(this.viewportPos(event));
+        this.level.canvasMove(event);
     }
-};
-
-Game.prototype.viewportPos = function(event) {
-    var canvasPos = new Vec2(event.currentPosition.x, event.currentPosition.y);
-    canvasPos.x = 2 * canvasPos.x / this.resizer.canvas.width - 1;
-    canvasPos.y = 1 - 2 * canvasPos.y / this.resizer.canvas.height;
-    return new THREE.Vector3(canvasPos.x, canvasPos.y, 0);
 };
 
 /**
@@ -516,7 +509,7 @@ window['start'] = function() {
     game = new Game(resizer, renderer, loadingBar);
     
     // Create event handlers for mouse and touch based input that will call on the canvas* members of game.
-    resizer.createPointerEventListener(game, true);
+    resizer.createPointerEventListener(game, true, GJS.CanvasResizer.EventCoordinateSystem.WEBGL_NORMALIZED_DEVICE_COORDINATES);
     
     startMainLoop([resizer, game, loadingBar, resizer.pixelator()], {debugMode: DEBUG_MAIN_LOOP});
 };
