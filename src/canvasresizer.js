@@ -481,7 +481,7 @@ GJS.CanvasResizer.prototype.getCanvasPosition = function(event, touchIdentifier,
     }
     if (coordinateSystem === GJS.CanvasResizer.EventCoordinateSystem.WEBGL_NORMALIZED_DEVICE_COORDINATES) {
         xRel = 2.0 * xRel / coordWidth - 1.0;
-        yRel = 1.0 - 2.0 * yRel / coordWidth;
+        yRel = 1.0 - 2.0 * yRel / coordHeight;
     }
     return GJS.CanvasResizer._createVec2(xRel, yRel);
 };
