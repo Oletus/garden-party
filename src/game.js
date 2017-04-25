@@ -401,7 +401,7 @@ Game.prototype.spacePress = function() {
 /**
  * Mouse/touch handler for pressing down a mouse button or touch.
  * @param {Object} event With following keys:
- *   current: Vec2 with current pointer coordinates in the canvas coordinate system.
+ *   currentPosition: Vec2 with current pointer coordinates in the canvas coordinate system.
  *   lastDown: Vec2 with coordinates of the latest press event in the canvas coordinate system.
  *   isDown: Boolean telling if the pointer is down.
  *   index: Integer index of the pointer being tracked.
@@ -412,7 +412,7 @@ Game.prototype.canvasPress = function(event) {
 /**
  * Mouse/touch handler for releasing a mouse button or touch.
  * @param {Object} event With following keys:
- *   current: Vec2 with current pointer coordinates in the canvas coordinate system.
+ *   currentPosition: Vec2 with current pointer coordinates in the canvas coordinate system.
  *   lastDown: Vec2 with coordinates of the latest press event in the canvas coordinate system.
  *   isDown: Boolean telling if the pointer is down.
  *   index: Integer index of the pointer being tracked.
@@ -423,7 +423,7 @@ Game.prototype.canvasRelease = function(event) {
 /**
  * Mouse/touch handler when a pointer is being moved.
  * @param {Object} event With following keys:
- *   current: Vec2 with current pointer coordinates in the canvas coordinate system.
+ *   currentPosition: Vec2 with current pointer coordinates in the canvas coordinate system.
  *   lastDown: Vec2 with coordinates of the latest press event in the canvas coordinate system.
  *   isDown: Boolean telling if the pointer is down.
  *   index: Integer index of the pointer being tracked.
