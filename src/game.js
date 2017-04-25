@@ -86,49 +86,22 @@ Game.prototype.loadStaticScene = function() {
     this.failScoreText.addToScene();
     
     this.failTextMaterial = DinnerTable.failTextMaterial.clone();
-    this.levelFailedText = new GJS.ThreeExtrudedTextObject({
+    this.levelFailedText = this.createLevelEndTitle({
         sceneParent: this.guiParent,
         textAlign: 'center',
-        material: this.failTextMaterial
+        material: this.failTextMaterial,
+        string: 'PARTY FAILED!',
+        subtitleString: 'PRESS SPACE TO RETRY'
     });
-    this.levelFailedText.setString('PARTY FAILED!');
-    this.levelFailedText.object.position.x = -Level.gridWidth * 0.5;
-    this.levelFailedText.object.position.z = -Level.gridDepth * 0.3;
-    this.levelFailedText.object.position.y = 4.5;
-    this.levelFailedText.object.scale.multiplyScalar(1.5);
     
     this.successTextMaterial = DinnerTable.scoreTextMaterial.clone();
-    this.levelSuccessText = new GJS.ThreeExtrudedTextObject({
+    this.levelSuccessText = this.createLevelEndTitle({
         sceneParent: this.guiParent,
         textAlign: 'center',
-        material: this.successTextMaterial
+        material: this.successTextMaterial,
+        string: 'SPLENDID PARTY!',
+        subtitleString: 'PRESS SPACE TO CONTINUE'
     });
-    this.levelSuccessText.setString('SPLENDID PARTY!');
-    this.levelSuccessText.object.position.x = -Level.gridWidth * 0.5;
-    this.levelSuccessText.object.position.z = -Level.gridDepth * 0.3;
-    this.levelSuccessText.object.position.y = 4.5;
-    this.levelSuccessText.object.scale.multiplyScalar(1.5);
-
-    this.levelContinueText = new GJS.ThreeExtrudedTextObject({
-        sceneParent: this.guiParent,
-        textAlign: 'center',
-        material: this.successTextMaterial
-    });
-    this.levelContinueText.setString('PRESS SPACE TO CONTINUE');
-    this.levelContinueText.object.position.x = -Level.gridWidth * 0.5;
-    this.levelContinueText.object.position.z = -Level.gridDepth * 0.3;
-    this.levelContinueText.object.position.y = 3.0;
-    
-    this.levelContinueFailedText = new GJS.ThreeExtrudedTextObject({
-        sceneParent: this.guiParent,
-        textAlign: 'center',
-        material: this.failTextMaterial
-    });
-    this.levelContinueFailedText.setString('PRESS SPACE TO RETRY');
-    this.levelContinueFailedText.object.position.x = -Level.gridWidth * 0.5;
-    this.levelContinueFailedText.object.position.z = -Level.gridDepth * 0.3;
-    this.levelContinueFailedText.object.position.y = 3.0;
-    
     
     this.gameTitleText = new GJS.ThreeExtrudedTextObject({
         sceneParent: this.guiParent,
@@ -152,6 +125,25 @@ Game.prototype.loadStaticScene = function() {
     this.gameSubTitleText.object.position.z = -Level.gridDepth * 0.3;
     this.gameSubTitleText.object.position.y = 3.0;
     this.gameSubTitleText.object.scale.multiplyScalar(0.5);
+};
+
+Game.prototype.createLevelEndTitle = function(options) {
+    var text = new GJS.ThreeExtrudedTextObject(options);
+    text.object.position.x = -Level.gridWidth * 0.5;
+    text.object.position.z = -Level.gridDepth * 0.3;
+    text.object.position.y = 4.5;
+    text.object.scale.multiplyScalar(1.5);
+    
+    var subtitleText = new GJS.ThreeExtrudedTextObject({
+        sceneParent: text.object,
+        textAlign: 'center',
+        material: options.material,
+        string: options.subtitleString
+    });
+    subtitleText.object.position.y = -1.0;
+    subtitleText.object.scale.multiplyScalar(0.65);
+    subtitleText.addToScene();
+    return text;
 };
 
 Game.prototype.setupLights = function() {
@@ -283,8 +275,6 @@ Game.prototype.loadLevel = function() {
         this.scene.remove(this.level.levelSceneParent);
         this.levelFailedText.removeFromScene();
         this.levelSuccessText.removeFromScene();
-        this.levelContinueFailedText.removeFromScene();
-        this.levelContinueText.removeFromScene();
     }
     this.level = new Level({
         game: this,

@@ -117,6 +117,8 @@ GJS.ThreeTextObject.prototype.setString = function(string) {
 /**
  * An object that displays a text string as an extruded Three.js mesh.
  * To use this, first set GJS.ThreeExtrudedTextObject.defaultFont. You can use GJS.utilTHREE.loadFont to load the font.
+ * The scene object that acts as a parent to the text will be stored under the property "object" and can be accessed
+ * directly to set its model transform or to add additional children.
  * @constructor
  */
 GJS.ThreeExtrudedTextObject = function(options) {
@@ -130,6 +132,7 @@ GJS.ThreeExtrudedTextObject = function(options) {
         receiveShadow: false
     };
     objectUtil.initWithDefaults(this, defaults, options);
+    this.rowMeshes = [];
     this.initThreeTextObject(options);
 };
 
@@ -141,9 +144,10 @@ GJS.ThreeExtrudedTextObject.prototype = new GJS.ThreeTextObject();
 GJS.ThreeExtrudedTextObject.prototype.setString = function(string) {
     if (string != this.string) {
         GJS.ThreeTextObject.prototype.setString.call(this, string);
-        while (this.object.children.length > 0) {
-            this.object.remove(this.object.children[0]);
+        for (var i = 0; i < this.rowMeshes.length; ++i) {
+            this.object.remove(this.rowMeshes[i]);
         }
+        this.rowMeshes.splice(0);
         for (var i = 0; i < this.stringSplitToRows.length; ++i) {
             var rowMesh = this._createTextMesh(this.stringSplitToRows[i]);
             if (this.textAlign === 'left') {
@@ -153,6 +157,7 @@ GJS.ThreeExtrudedTextObject.prototype.setString = function(string) {
             }
             rowMesh.position.y = (this.stringSplitToRows.length - i - 0.5) * this.rowSpacing;
             this.object.add(rowMesh);
+            this.rowMeshes.push(rowMesh);
         }
     }
 };
