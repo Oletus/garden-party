@@ -1,6 +1,6 @@
 {
   "name": "garden-party",
-  "version": "0.1",
+  "version": "0.1.0",
   "description": "Game project created using gameutils.js",
   "devDependencies": {
     "google-closure-compiler": "^20151015.0.0",
