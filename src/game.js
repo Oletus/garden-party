@@ -500,7 +500,6 @@ window['start'] = function() {
                 game.updateCamera(width / height);
                 if (game.effectComposer !== null) {
                     game.effectComposer.setSize(width, height);
-                    game.aaPass.setSize(width, height);
                     game.depthRenderTarget.setSize(width, height);
                     game.ssaoPass.uniforms[ 'size' ].value.set(width, height);
                 }
