@@ -89,6 +89,9 @@ GJS.ThreeTextObject = function() {
 
 GJS.ThreeTextObject.prototype = new GJS.ThreeSceneObject();
 
+/**
+ * @param {Object} options
+ */
 GJS.ThreeTextObject.prototype.initThreeTextObject = function(options) {
     var defaults = {
         string: "",
@@ -106,8 +109,8 @@ GJS.ThreeTextObject.prototype.initThreeTextObject = function(options) {
     this.setString(string);
 };
 
-/**
- * @param {string} string
+/** 
+ * @param {string} string String to display.
  */
 GJS.ThreeTextObject.prototype.setString = function(string) {
     this.string = string;
@@ -119,6 +122,14 @@ GJS.ThreeTextObject.prototype.setString = function(string) {
  * To use this, first set GJS.ThreeExtrudedTextObject.defaultFont. You can use GJS.utilTHREE.loadFont to load the font.
  * The scene object that acts as a parent to the text will be stored under the property "object" and can be accessed
  * directly to set its model transform or to add additional children.
+ * @param {Object} options Options with the following keys, in addition to THREE.TextGeometry and ThreeSceneObject
+ * options:
+ *   string (string)
+ *   maxRowLength (number): Maximum row length in characters.
+ *   rowSpacing (number): Relative spacing of rows.
+ *   textAlign (string): 'left', 'center' or 'right'
+ *   receiveShadow (boolean)
+ *   castShadow (boolean)
  * @constructor
  */
 GJS.ThreeExtrudedTextObject = function(options) {
@@ -141,6 +152,9 @@ GJS.ThreeExtrudedTextObject.defaultFont = null;
 
 GJS.ThreeExtrudedTextObject.prototype = new GJS.ThreeTextObject();
 
+/** 
+ * @param {string} string String to display.
+ */
 GJS.ThreeExtrudedTextObject.prototype.setString = function(string) {
     if (string != this.string) {
         GJS.ThreeTextObject.prototype.setString.call(this, string);
@@ -162,6 +176,10 @@ GJS.ThreeExtrudedTextObject.prototype.setString = function(string) {
     }
 };
 
+/**
+ * @param {string} string String to create a mesh for.
+ * @return {THREE.Object3D} Text geometry object.
+ */
 GJS.ThreeExtrudedTextObject.prototype._createTextMesh = function(string) {
     var textGeo = new THREE.TextGeometry( string, {
         font: this.font,
